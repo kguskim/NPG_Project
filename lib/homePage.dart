@@ -27,7 +27,7 @@ class HomePage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CameraPage()),
+                  MaterialPageRoute(builder: (context) => CameraPage()),
                 );
               },
               child: Column(
