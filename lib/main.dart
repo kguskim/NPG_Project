@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'homePage.dart';
+import 'loginPage.dart';
 
 // 앱 엔트리
 void main() {
@@ -23,7 +23,7 @@ class NpgProject extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false, // 디버깅 모드 베나 표시
-      home: HomePage(), // homePage.dart의
+      home: Loginpage(), // homePage.dart의
     );
   }
 }
