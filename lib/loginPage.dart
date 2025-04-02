@@ -34,7 +34,7 @@ class Loginpage extends StatelessWidget {
                             TextField(
                               controller: controller,
                               autofocus: true,
-                              decoration: InputDecoration(labelText: 'Email'),
+                              decoration: InputDecoration(labelText: 'ID'),
                               keyboardType: TextInputType.emailAddress,
                             ),
                             TextField(
@@ -46,12 +46,14 @@ class Loginpage extends StatelessWidget {
                               obscureText: true, // 비밀번호 안보이도록 하는 것
                             ),
                             SizedBox(height: 40.0),
+                            // 회원가입 버튼
+                            TextButton(onPressed: () {}, child: Text("회원가입")),
                             ButtonTheme(
                               minWidth: 100.0,
                               height: 50.0,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  if (controller.text == 'mei@hello.com' &&
+                                  if (controller.text == 'test@email.com' &&
                                       controller2.text == '1234') {
                                     Navigator.push(
                                       context,
@@ -64,18 +66,18 @@ class Loginpage extends StatelessWidget {
                                   } else if (controller.text ==
                                           'test@email.com' &&
                                       controller2.text != '1234') {
-                                    showSnackBar(
-                                      context,
-                                      Text('Wrong password'),
-                                    );
+                                    showSnackBar(context, Text('잘못된 비밀번호입니다.'));
                                   } else if (controller.text !=
                                           'test@email.com' &&
                                       controller2.text == '1234') {
-                                    showSnackBar(context, Text('Wrong email'));
+                                    showSnackBar(
+                                      context,
+                                      Text('아이디를 확인해 주세요.'),
+                                    );
                                   } else {
                                     showSnackBar(
                                       context,
-                                      Text('Check your info again'),
+                                      Text('아이디와 비밀번호를 확인해 주세요.'),
                                     );
                                   }
                                 },
