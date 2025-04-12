@@ -10,9 +10,10 @@ import datetime
 from ultralytics import YOLO
 import pytesseract # 유통기한 추출 시
 import requests # 인터넷 통신 시
+import os
 
 # 모델 로드 / 사전 학습, 커스텀 모델 경로 또한 가능
-model = YOLO("")
+model = YOLO("yolov8s.pt") # 임시로 yolov8s.pt 넣어둠
 
 # 매핑 - 표준화 사전
 name_map = {}
@@ -22,7 +23,7 @@ calorie_map = {}
 os.makedirs("detected_ingredients", exist_ok=True)
 
 # 메타데이터 함수 생성
-def get_metadata(name):
+def get_metadata(name, expiration_text):
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")    # 날짜 정보 기록록
     std_name = name_map.get(name, name)    # name_map> 이름 표준화 dict - 임시, 데이터 없으면 그대로 사용
     calorie = calorie_map.get(std_name, "칼로리 정보 없음")    # 데이터 없으면 문자 출력
@@ -49,7 +50,7 @@ cam = cv2.VideoCapture(0)
 # ret> 영상 읽혔는지 boolean, false 시 종료
 while True:
     # frame> numpy 배열 형식의 이미지 데이터터
-    ret, frame = cap.read()
+    ret, frame = cam.read()
     if not ret:
         break
     
@@ -70,13 +71,18 @@ while True:
         path = os.path.join("detected_ingredients", filename)
         cv2.imwrite(path, crop_img)
 
+        pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
+
         # ocr 유통기한 텍스트
         ocr_text = pytesseract.image_to_string(crop_img, lang='eng+kor')
         print("[OCR]", ocr_text)
 
         data = get_metadata(name, ocr_text)    # 생성한 함수에 넘겨 추가 정보를 받아옴
         print(data) # -- 개발자 디버깅용
-    if cv2.waitKey(1) & 0xFF == 27    # 27 = esc
+
+    cv2.imshow('Camera', frame)
+
+    if cv2.waitKey(1) & 0xFF == 27:    # 27 = esc
         break
 
 cam.release()
