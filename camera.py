@@ -4,13 +4,14 @@
 
 # import
 import cv2
-import torch
 import numpy as np
 import datetime 
 from ultralytics import YOLO
 import pytesseract # 유통기한 추출 시
-import requests # 인터넷 통신 시
 import os
+import requests # 인터넷 통신 시
+import torch
+
 
 # 모델 로드 / 사전 학습, 커스텀 모델 경로 또한 가능
 model = YOLO("yolov8s.pt") # 임시로 yolov8s.pt 넣어둠
@@ -60,13 +61,21 @@ while True:
     for box in results[0].boxes:
         class_id = int(box.cls[0])    # 사물 이름 apple, strawberry 등
         name = model.names[class_id]    # yolo 모델에 등록된 id - 이름
-        
+        std_name = name_map.get(name, name)
         # 박스 좌표 > 이미지 자르기
         xyxy = box.xyxy[0].cpu().numpy().astype(int)
         x1, y1, x2, y2 = xyxy
-        crop_img = frame[y1:y2, x1:x2]
+
+        # 박스 그림
+        cv2.rectangle(frame, (x1, y1), (x2, y2), color=(255, 0, 0), thickness=2)
+        
+        # 라벨
+        label = f"{std_name}"
+        cv2.putText(frame, label, (x1, y1 - 15), fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale = 0.5, color=(0,255,0), thickness=2)
 
         # 이미지 저장
+        crop_img = frame[y1:y2, x1:x2]
         filename = f"{name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
         path = os.path.join("detected_ingredients", filename)
         cv2.imwrite(path, crop_img)
