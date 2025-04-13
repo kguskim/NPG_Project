@@ -1,3 +1,8 @@
+"""
+result = CLIENT.infer(your_image.jpg, model_id="food-ingredients-dataset/3")
+"""
+
+
 # 필요 라이브러리 설치
 # pip install tensorflow opencv-python requests numpy
 # pip install pytesseract
@@ -12,9 +17,9 @@ import os
 import requests # 인터넷 통신 시
 import torch
 
-
 # 모델 로드 / 사전 학습, 커스텀 모델 경로 또한 가능
 model = YOLO("yolov8s.pt") # 임시로 yolov8s.pt 넣어둠
+model.train(data='C:/Users/User/Documents/NPG_Project/FOOD-INGREDIENTS dataset.v4i.yolov5pytorch/data.yaml', epochs=1)
 
 # 매핑 - 표준화 사전
 name_map = {}
