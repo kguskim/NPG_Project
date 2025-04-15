@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>식재료 수동 입력 폼</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f2f5
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+    input, select {
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    input[type="date"] {
+      padding: 8px;
+    }
+    button {
+      margin-top: 25px;
+      padding: 12px;
+      background-color: #3498db;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>식재료 수동 입력</h1>
+    <form id="ingredientForm">
+      <!-- 식재료 이름 -->
+      <label for="ingredientName">식재료 이름:</label>
+      <input type="text" id="ingredientName" name="ingredientName" placeholder="예: 두부" required>
+
+      <!-- 카테고리 선택 -->
+      <label for="description">카테고리</label>
+      <select id="category" name="category" required>
+        <option value="">카테고리 선택</option>
+        <option value="채소">채소</option>
+        <option value="과일">과일</option>
+        <option value="육류">육류</option>
+        <option value="해산물">해산물</option>
+        <option value="유제품">유제품</option>
+        <option value="곡류">곡류</option>
+        <option value="기타">기타</option>
+      </select>
+
+      <!-- 유통기한 -->
+      <label for="expirationDate">유통기한</label>
+      <input type="text" id="expirationDate" name="expirationDate" placeholder="예: 2025.04.15" required>
+
+      <!-- 수량 -->
+      <label for="quantity">수량</label>
+      <input type="text" id="quantity" name="quantity" placeholder="예: 500g 또는 2개" required>
+
+      <!-- 보관 위치 -->
+      <label for="location">보관 위치</label>
+      <input type="text" id="location" name="location" placeholder="예: 냉장실, 냉동실, 야채칸" required>
+
+      <button type="submit">입력 완료</button>
+    </form>
+  </div>
+
+  
+</body>
+</html>
