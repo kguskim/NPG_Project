@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
@@ -53,6 +54,46 @@ class _CameraPageState extends State<CameraPage> {
           }
         },
       ),
+      // 버튼 누를 시 카메라 화면의 캡쳐본을 보여주는 화면으로 이동
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          try {
+            await _initializeControllerFuture;
+            // 현재 카메라 화면 캡쳐
+            final image = await _controller.takePicture();
+
+            if (!mounted) return;
+
+            // 사진 보여주기
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder:
+                    (context) => DisplayPictureScreen(imagePath: image.path),
+              ),
+            );
+          } catch (e) {
+            print(e);
+          }
+        },
+        child: const Icon(Icons.camera_alt),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+}
+
+// --------------------------------
+// 찍은 사진 보여주는 위젯
+class DisplayPictureScreen extends StatelessWidget {
+  final String imagePath;
+
+  const DisplayPictureScreen({super.key, required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('캡쳐 화면')),
+      body: Image.file(File(imagePath)),
     );
   }
 }
