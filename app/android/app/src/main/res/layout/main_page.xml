@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="10dp">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="55dp">
+
+        <TextView
+            android:text="바나나 소비기한 임박"
+            android:textSize="25dp"
+            android:textAlignment="center"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+
+        <Button
+            android:text="profile"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+        <Button
+            android:text="option"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/dateTxt"
+        android:text="DATE"
+        android:textAlignment="center"
+        android:textSize="25dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="55dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:layout_marginBottom="80dp">
+
+        <Button
+            android:id="@+id/insertBtn"
+            android:drawableTop="@drawable/food_ingredients_insert_ico"
+            android:background="#83AAE5"
+            android:text="식재료 등록"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="25dp"/>
+
+        <Button
+            android:id="@+id/manageBtn"
+            android:drawableTop="@drawable/food_ingredients_list_ico"
+            android:background="#83AAE5"
+            android:text="식재료 관리"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="25dp"/>
+
+        <Button
+            android:id="@+id/recipeBtn"
+            android:drawableTop="@drawable/recipe_recommand_ico"
+            android:background="#83AAE5"
+            android:text="레시피 추천"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+
+    </LinearLayout>
+
+</LinearLayout>
