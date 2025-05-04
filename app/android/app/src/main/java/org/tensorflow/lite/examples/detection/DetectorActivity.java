@@ -90,11 +90,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         tracker = new MultiBoxTracker(this);
 
-        final int modelIndex = modelView.getCheckedItemPosition();
-        final String modelString = modelStrings.get(modelIndex);
 
         try {
-            detector = DetectorFactory.getDetector(getAssets(), modelString);
+            detector = DetectorFactory.getDetector(getAssets(), "best-fp16.tflite");
         } catch (final IOException e) {
             e.printStackTrace();
             LOGGER.e(e, "Exception initializing classifier!");
@@ -143,36 +141,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     protected void updateActiveModel() {
         // Get UI information before delegating to background
-        final int modelIndex = modelView.getCheckedItemPosition();
-        final int deviceIndex = deviceView.getCheckedItemPosition();
-        String threads = threadsTextView.getText().toString().trim();
-        final int numThreads = Integer.parseInt(threads);
 
         handler.post(() -> {
-            if (modelIndex == currentModel && deviceIndex == currentDevice
-                    && numThreads == currentNumThreads) {
-                return;
-            }
-            currentModel = modelIndex;
-            currentDevice = deviceIndex;
-            currentNumThreads = numThreads;
-
             // Disable classifier while updating
             if (detector != null) {
                 detector.close();
                 detector = null;
             }
 
-            // Lookup names of parameters.
-            String modelString = modelStrings.get(modelIndex);
-            String device = deviceStrings.get(deviceIndex);
-
-            LOGGER.i("Changing model to " + modelString + " device " + device);
-
             // Try to load model.
 
             try {
-                detector = DetectorFactory.getDetector(getAssets(), modelString);
+                detector = DetectorFactory.getDetector(getAssets(), "best-fp16.tflite");
                 // Customize the interpreter to the type of device we want to use.
                 if (detector == null) {
                     return;
@@ -189,14 +169,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             }
 
 
-            if (device.equals("CPU")) {
-                detector.useCPU();
-            } else if (device.equals("GPU")) {
-                detector.useGpu();
-            } else if (device.equals("NNAPI")) {
-                detector.useNNAPI();
-            }
-            detector.setNumThreads(numThreads);
+            detector.useCPU();
 
             int cropSize = detector.getInputSize();
             croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
@@ -281,16 +254,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         trackingOverlay.postInvalidate();
 
                         computingDetection = false;
-
-                        runOnUiThread(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        showFrameInfo(previewWidth + "x" + previewHeight);
-                                        showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
-                                        showInference(lastProcessingTimeMs + "ms");
-                                    }
-                                });
                     }
                 });
     }
@@ -309,15 +272,5 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     // checkpoints.
     private enum DetectorMode {
         TF_OD_API;
-    }
-
-    @Override
-    protected void setUseNNAPI(final boolean isChecked) {
-        runInBackground(() -> detector.setUseNNAPI(isChecked));
-    }
-
-    @Override
-    protected void setNumThreads(final int numThreads) {
-        runInBackground(() -> detector.setNumThreads(numThreads));
     }
 }

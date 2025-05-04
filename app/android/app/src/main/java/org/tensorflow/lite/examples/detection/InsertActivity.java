@@ -16,6 +16,7 @@
 
 package org.tensorflow.lite.examples.detection;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -26,13 +27,17 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -80,6 +85,28 @@ public class InsertActivity extends CameraActivity implements OnImageAvailableLi
 
     private BorderedText borderedText;
 
+    private Button ingredientInsertBtn;
+
+    private List<Classifier.Recognition> mappedRecognitions;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ingredientInsertBtn = findViewById(R.id.ingredientInsertBtn);
+        ingredientInsertBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), InsertPageActivity.class);
+                String[] ingredientsNames = new String[mappedRecognitions.size()];
+                for(int i = 0; i < mappedRecognitions.size(); i++){
+                    ingredientsNames[i] = mappedRecognitions.get(i).getTitle();
+                }
+                intent.putExtra("ingredients", ingredientsNames);
+                startActivity(intent);
+            }
+        });
+    }
+
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation) {
         final float textSizePx =
@@ -90,11 +117,8 @@ public class InsertActivity extends CameraActivity implements OnImageAvailableLi
 
         tracker = new MultiBoxTracker(this);
 
-        final int modelIndex = modelView.getCheckedItemPosition();
-        final String modelString = modelStrings.get(modelIndex);
-
         try {
-            detector = DetectorFactory.getDetector(getAssets(), modelString);
+            detector = DetectorFactory.getDetector(getAssets(), "best-fp16.tflite");
         } catch (final IOException e) {
             e.printStackTrace();
             LOGGER.e(e, "Exception initializing classifier!");
@@ -142,37 +166,17 @@ public class InsertActivity extends CameraActivity implements OnImageAvailableLi
     }
 
     protected void updateActiveModel() {
-        // Get UI information before delegating to background
-        final int modelIndex = modelView.getCheckedItemPosition();
-        final int deviceIndex = deviceView.getCheckedItemPosition();
-        String threads = threadsTextView.getText().toString().trim();
-        final int numThreads = Integer.parseInt(threads);
-
         handler.post(() -> {
-            if (modelIndex == currentModel && deviceIndex == currentDevice
-                    && numThreads == currentNumThreads) {
-                return;
-            }
-            currentModel = modelIndex;
-            currentDevice = deviceIndex;
-            currentNumThreads = numThreads;
-
             // Disable classifier while updating
             if (detector != null) {
                 detector.close();
                 detector = null;
             }
 
-            // Lookup names of parameters.
-            String modelString = modelStrings.get(modelIndex);
-            String device = deviceStrings.get(deviceIndex);
-
-            LOGGER.i("Changing model to " + modelString + " device " + device);
-
             // Try to load model.
 
             try {
-                detector = DetectorFactory.getDetector(getAssets(), modelString);
+                detector = DetectorFactory.getDetector(getAssets(), "best-fp16.tflite");
                 // Customize the interpreter to the type of device we want to use.
                 if (detector == null) {
                     return;
@@ -187,16 +191,6 @@ public class InsertActivity extends CameraActivity implements OnImageAvailableLi
                 toast.show();
                 finish();
             }
-
-
-            if (device.equals("CPU")) {
-                detector.useCPU();
-            } else if (device.equals("GPU")) {
-                detector.useGpu();
-            } else if (device.equals("NNAPI")) {
-                detector.useNNAPI();
-            }
-            detector.setNumThreads(numThreads);
 
             int cropSize = detector.getInputSize();
             croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
@@ -262,7 +256,7 @@ public class InsertActivity extends CameraActivity implements OnImageAvailableLi
                                 break;
                         }
 
-                        final List<Classifier.Recognition> mappedRecognitions =
+                        mappedRecognitions =
                                 new LinkedList<Classifier.Recognition>();
 
                         for (final Classifier.Recognition result : results) {
@@ -281,16 +275,6 @@ public class InsertActivity extends CameraActivity implements OnImageAvailableLi
                         trackingOverlay.postInvalidate();
 
                         computingDetection = false;
-
-                        runOnUiThread(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        showFrameInfo(previewWidth + "x" + previewHeight);
-                                        showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
-                                        showInference(lastProcessingTimeMs + "ms");
-                                    }
-                                });
                     }
                 });
     }
@@ -309,15 +293,5 @@ public class InsertActivity extends CameraActivity implements OnImageAvailableLi
     // checkpoints.
     private enum DetectorMode {
         TF_OD_API;
-    }
-
-    @Override
-    protected void setUseNNAPI(final boolean isChecked) {
-        runInBackground(() -> detector.setUseNNAPI(isChecked));
-    }
-
-    @Override
-    protected void setNumThreads(final int numThreads) {
-        runInBackground(() -> detector.setNumThreads(numThreads));
     }
 }

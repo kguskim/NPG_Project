@@ -59,6 +59,7 @@ public class asdActivity extends AppCompatActivity {
             }).start();
 
         });
+
         this.sourceBitmap = Utils.getBitmapFromAsset(asdActivity.this, "kite.jpg");
 
         this.cropBitmap = Utils.processBitmap(sourceBitmap, TF_OD_API_INPUT_SIZE);
