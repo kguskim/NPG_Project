@@ -1,31 +1,28 @@
-// lib/home_page.dart
+// lib/home.dart
 
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
 
-/// 게시물 모델
+/// 공지사항 모델
 class Post {
   final int id;
   final String title;
   final DateTime date;
-
   Post({required this.id, required this.title, required this.date});
 }
 
-/// 메뉴 모델
+/// 오늘의 메뉴 모델
 class Menu {
   final String name;
   final String imageUrl;
-
   Menu({required this.name, required this.imageUrl});
 }
 
-/// 데이터 서비스
+/// 데이터 서비스 (더미)
 class DataService {
-  /// DB에서 최신 [count]개 공지사항을 가져오는 예시
   static Future<List<Post>> fetchLatestPosts(int count) async {
-    // TODO: 실제 SQLite 또는 서버 DB 연동 로직으로 교체
     await Future.delayed(const Duration(milliseconds: 500));
     return List.generate(count, (i) => Post(
       id: count - i,
@@ -34,34 +31,22 @@ class DataService {
     ));
   }
 
-  /// 임의 조건에 따라 랜덤 메뉴를 선택하는 예시
   static Future<Menu> getTodayMenu() async {
-    // TODO: 실제 비즈니스 로직 또는 DB 조회로 교체
     final candidates = [
-      Menu(
-          name: '토마토 스프 파스타',
-          imageUrl:
-          'https://via.placeholder.com/200x200.png?text=Tomato+Pasta'),
-      Menu(
-          name: '크림 리조또',
-          imageUrl:
-          'https://via.placeholder.com/200x200.png?text=Cream+Risotto'),
-      Menu(
-          name: '카레 라이스',
-          imageUrl:
-          'https://via.placeholder.com/200x200.png?text=Curry+Rice'),
+      Menu(name: '토마토 스프 파스타', imageUrl: 'https://via.placeholder.com/100'),
+      Menu(name: '크림 리조또',     imageUrl: 'https://via.placeholder.com/100'),
+      Menu(name: '카레 라이스',     imageUrl: 'https://via.placeholder.com/100'),
     ];
     await Future.delayed(const Duration(milliseconds: 300));
     return candidates[Random().nextInt(candidates.length)];
   }
 }
 
-/// 홈 페이지 위젯
+/// 홈 페이지
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
-
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
@@ -109,7 +94,7 @@ class _HomePageState extends State<HomePage> {
               ),
 
               const SizedBox(height: 8),
-              // 날짜 시간 표시
+              // 날짜/시간 표시
               Center(
                 child: Text(
                   formattedDate,
@@ -126,21 +111,26 @@ class _HomePageState extends State<HomePage> {
                     icon: Icons.emoji_food_beverage,
                     label: '재료',
                     onTap: () {
-                      // 재료 페이지로 이동
+                      // TODO: 재료 페이지로 네비게이션
                     },
                   ),
                   _NavButton(
                     icon: Icons.kitchen,
                     label: '냉장고',
                     onTap: () {
-                      // 냉장고 페이지로 이동
+                      // TODO: 냉장고 페이지로 네비게이션
                     },
                   ),
                   _NavButton(
                     icon: Icons.menu_book,
                     label: '레시피',
                     onTap: () {
-                      // 레시피 페이지로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RecipePage.test(),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -167,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                             if (snap.connectionState == ConnectionState.waiting) {
                               return const Center(child: CircularProgressIndicator());
                             }
-                            if (!snap.hasData || snap.hasError) {
+                            if (snap.hasError || !snap.hasData) {
                               return const Text('공지 로드 실패');
                             }
                             final posts = snap.data!;
@@ -203,13 +193,12 @@ class _HomePageState extends State<HomePage> {
                             if (snap.connectionState == ConnectionState.waiting) {
                               return const Center(child: CircularProgressIndicator());
                             }
-                            if (!snap.hasData || snap.hasError) {
+                            if (snap.hasError || !snap.hasData) {
                               return const Text('메뉴 로드 실패');
                             }
                             final menu = snap.data!;
                             return Column(
                               children: [
-                                // 고정된 크기의 이미지 박스
                                 SizedBox(
                                   width: 100,
                                   height: 100,
@@ -217,8 +206,6 @@ class _HomePageState extends State<HomePage> {
                                     borderRadius: BorderRadius.circular(8),
                                     child: Image.network(
                                       menu.imageUrl,
-                                      width: 100,
-                                      height: 100,
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) {
                                         return Container(
