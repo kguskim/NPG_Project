@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
+import 'manage.dart'; //
 
 /// 공지사항 모델
 class Post {
@@ -116,9 +117,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                   _NavButton(
                     icon: Icons.kitchen,
-                    label: '냉장고',
+                    label: '냉장고 관리',
                     onTap: () {
-                      // TODO: 냉장고 페이지로 네비게이션
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ManagePage()),
+                      );
                     },
                   ),
                   _NavButton(
