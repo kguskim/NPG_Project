@@ -1,8 +1,9 @@
 import 'package:camera/camera.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_vision/flutter_vision.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:yolo/insert_page.dart';
 
 late List<CameraDescription> cameras;
 
@@ -40,28 +41,14 @@ class _YoloVideoState extends State<YoloVideo> {
   bool isDetecting = false;
 
   late FlutterVision vision; // YOLO
-  FlutterTts flutterTts = FlutterTts(); // TTS
 
   @override
   void initState() {
     super.initState();
 
     vision = FlutterVision(); // YOLO
-    initTTS(); // TTS
 
     init();
-  }
-
-  Future<void> initTTS() async {
-    // TTS
-    await flutterTts.setLanguage("en-US"); // Set the language you want
-    await flutterTts.setSpeechRate(1.0); // Adjust speech rate (1.0 is normal)
-    await flutterTts.setVolume(1.0); // Adjust volume (0.0 to 1.0)
-    await flutterTts.setPitch(1.0); // Adjust pitch (1.0 is normal)
-  }
-
-  Future<void> speak(String text) async {
-    await flutterTts.speak(text); // TTS
   }
 
   init() async {
@@ -74,6 +61,8 @@ class _YoloVideoState extends State<YoloVideo> {
           isLoaded = true;
           isDetecting = false;
           yoloResults = [];
+
+          startDetection();
         });
       });
     });
@@ -81,7 +70,6 @@ class _YoloVideoState extends State<YoloVideo> {
 
   @override
   void dispose() async {
-    flutterTts.stop(); // TTS Stop
     vision.closeYoloModel(); // YOLO Stop
 
     super.dispose();
@@ -121,27 +109,31 @@ class _YoloVideoState extends State<YoloVideo> {
               border: Border.all(
                   width: 5, color: Colors.white, style: BorderStyle.solid),
             ),
-            child: isDetecting
-                ? IconButton(
-                    onPressed: () async {
-                      stopDetection();
-                    },
-                    icon: const Icon(
-                      Icons.stop,
-                      color: Colors.red,
+            child: IconButton(
+              onPressed: () async {
+                final XFile imageFile = await controller.takePicture();
+
+                // YOLO 결과에서 첫 번째 태그 추출
+                final String firstTag = yoloResults.isNotEmpty
+                    ? yoloResults.map((result) => result['tag'] as String).first
+                    : "Unknown";
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => InsertPage(
+                      data: firstTag,
+                      imagePath: imageFile.path, // File path 전달
                     ),
-                    iconSize: 50,
-                  )
-                : IconButton(
-                    onPressed: () async {
-                      await startDetection();
-                    },
-                    icon: const Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                    ),
-                    iconSize: 50,
                   ),
+                );
+              },
+              icon: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+              ),
+              iconSize: 50,
+            ),
           ),
         ),
       ],
@@ -175,6 +167,7 @@ class _YoloVideoState extends State<YoloVideo> {
     }
   }
 
+  // 객체 인식 시작
   Future<void> startDetection() async {
     setState(() {
       isDetecting = true;
@@ -190,6 +183,7 @@ class _YoloVideoState extends State<YoloVideo> {
     });
   }
 
+  // 객체 인식 종료
   Future<void> stopDetection() async {
     setState(() {
       isDetecting = false;
@@ -205,8 +199,6 @@ class _YoloVideoState extends State<YoloVideo> {
     Color colorPick = const Color.fromARGB(255, 50, 233, 30);
 
     return yoloResults.map((result) {
-      speak("${result['tag']}");
-
       return Positioned(
         left: result["box"][0] * factorX,
         top: result["box"][1] * factorY,
