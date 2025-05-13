@@ -1,0 +1,2 @@
+C:/Users/GUS/Documents/GitHub/NPG_Project/asd/android/app/.cxx/Debug/2g4i3e3m/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/GUS/Documents/GitHub/NPG_Project/asd/android/app/.cxx/Debug/2g4i3e3m/armeabi-v7a/CMakeFiles/rebuild_cache.dir

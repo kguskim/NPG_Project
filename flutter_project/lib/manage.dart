@@ -25,9 +25,9 @@ class ManagePage extends StatefulWidget {
 }
 
 class _ManagePageState extends State<ManagePage> {
-  // 드롭다운: 냉장고 종류
-  final List<String> _fridges = ['SAMSUNG BEOKE 냉장고 2도어 키친핏 333L', '사무실 냉장고', '친구 냉장고'];
-  String _selectedFridge = 'SAMSUNG BEOKE 냉장고 2도어 키친핏 333L';
+  // 냉장고 종류 드롭다운
+  final List<String> _fridges = ['집 냉장고', '사무실 냉장고', '친구 냉장고'];
+  String _selectedFridge = '집 냉장고';
 
   // 컴파트먼트(구획)
   final List<String> _compartments = ['냉장실', '냉동실', '문칸 상단', '문칸 하단'];
@@ -106,7 +106,6 @@ class _ManagePageState extends State<ManagePage> {
 
             // 컴파트먼트 네비게이션
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
@@ -117,11 +116,15 @@ class _ManagePageState extends State<ManagePage> {
                   }
                       : null,
                 ),
-                Text(
-                  _compartments[_currentCompartment],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      _compartments[_currentCompartment],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
                 IconButton(
@@ -137,57 +140,60 @@ class _ManagePageState extends State<ManagePage> {
             ),
             const SizedBox(height: 8),
 
-            // 아이템 그리드 (카메라 기능 제거)
+            // 냉장고 모양 컨테이너
             Expanded(
-              child: FutureBuilder<List<FridgeItem>>(
-                future: _itemsFuture,
-                builder: (_, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final items = snap.data ?? [];
-                  return GridView.builder(
-                    gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                    ),
-                    itemCount: items.length,
-                    itemBuilder: (context, i) {
-                      final item = items[i];
-                      return Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              item.imageUrl,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  border: Border.all(color: Colors.grey.shade400, width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: FutureBuilder<List<FridgeItem>>(
+                  future: _itemsFuture,
+                  builder: (context, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final items = snap.data ?? [];
+                    return GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, i) {
+                        final item = items[i];
+                        return Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                item.imageUrl,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
                             ),
-                          ),
-                          Positioned(
-                            top: 4,
-                            right: 4,
-                            child: GestureDetector(
-                              onTap: () => _deleteItem(item.id),
-                              child: const CircleAvatar(
-                                radius: 12,
-                                backgroundColor: Colors.black45,
-                                child: Icon(
-                                  Icons.delete,
-                                  size: 16,
-                                  color: Colors.white,
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: () => _deleteItem(item.id),
+                                child: const CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: Colors.black45,
+                                  child: Icon(Icons.delete, size: 16, color: Colors.white),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
           ],
