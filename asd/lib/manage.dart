@@ -102,80 +102,76 @@ class _ManagePageState extends State<ManagePage> {
     }
   }
 
-  /// Table 기반 칸막이 + 아이템 매핑
+  /// GridView 기반 칸막이 + 아이템 매핑
+  /// GridView + LayoutBuilder 기반 칸막이 + 아이템 매핑
   Widget _buildPartitionWithItems(List<FridgeItem> items) {
-    final section = _compartments[_currentCompartment];
-    final config = fridgeLayouts[_selectedFridge]![section]!;
+    final section     = _compartments[_currentCompartment];
+    final config      = fridgeLayouts[_selectedFridge]![section]!;
+    const spacing     = 12.0;  // 셀 간격
+    const borderWidth = 3.0;   // 셀 경계선 두께
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final totalHeight = constraints.maxHeight;
-        final spacing = 8.0;
-        final borderWidth = 2.0;
-        final cellHeight = (totalHeight - // total available height
-            (config.rows - 1) * spacing - // inside spacing
-            2 * borderWidth) // top/bottom borders
-            / config.rows;
+        // 전체 그리드 높이에서 스페이싱과 테두리 모두 뺀 뒤, 행 수로 나눠서 셀 높이 계산
+        final totalH    = constraints.maxHeight;
+        final rows      = config.rows;
+        final cellH     = (totalH - (rows - 1) * spacing - 2 * borderWidth) / rows;
 
-        return Table(
-          columnWidths: {
-            for (int i = 0; i < config.cols; i++)
-              i: const FlexColumnWidth(1),
-          },
-          border: TableBorder(
-            top: BorderSide(color: Colors.grey.shade400, width: borderWidth),
-            bottom: BorderSide(color: Colors.grey.shade400, width: borderWidth),
-            left: BorderSide(color: Colors.grey.shade400, width: borderWidth),
-            right: BorderSide(color: Colors.grey.shade400, width: borderWidth),
-            horizontalInside: BorderSide(color: Colors.grey.shade400, width: borderWidth),
-            verticalInside: BorderSide(color: Colors.grey.shade400, width: borderWidth),
+        return GridView.builder(
+          // 스크롤은 막아서 고정된 높이 안에서 모두 보이게
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount:    config.cols,      // 열 수
+            crossAxisSpacing:  spacing,          // 열 간격
+            mainAxisSpacing:   spacing,          // 행 간격
+            mainAxisExtent:    cellH,            // 셀 높이를 직접 지정
           ),
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          children: List.generate(config.rows, (r) {
-            return TableRow(
-              children: List.generate(config.cols, (c) {
-                final idx = r * config.cols + c;
-                Widget cell;
-                if (idx < items.length) {
-                  final item = items[idx];
-                  cell = Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.network(
-                          item.imageUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
-                      ),
-                      Positioned(
-                        top: 2,
-                        right: 2,
-                        child: GestureDetector(
-                          onTap: () => _deleteItem(item.id),
-                          child: const Icon(
-                            Icons.delete,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                } else {
-                  cell = const SizedBox.shrink();
-                }
-                return SizedBox(
-                  height: cellHeight,
-                  child: Padding(
-                    padding: EdgeInsets.all(spacing / 2),
-                    child: cell,
+          itemCount: config.rows * config.cols,
+          itemBuilder: (context, idx) {
+            Widget cellContent;
+            if (idx < items.length) {
+              final item = items[idx];
+              cellContent = Stack(
+                children: [
+                  // 이미지
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.network(
+                      item.imageUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
                   ),
-                );
-              }),
+                  // 삭제 버튼
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: () => _deleteItem(item.id),
+                      child: const CircleAvatar(
+                        radius: 12,
+                        backgroundColor: Colors.black45,
+                        child: Icon(Icons.delete, size: 16, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            } else {
+              cellContent = const SizedBox.shrink();
+            }
+
+            // 흰 배경 + 두꺼운 테두리 + 둥근 모서리
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.grey.shade400, width: borderWidth),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: cellContent,
             );
-          }),
+          },
         );
       },
     );
@@ -193,15 +189,12 @@ class _ManagePageState extends State<ManagePage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 냉장고 선택 드롭다운
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(
                 labelText: '냉장고 종류',
                 border: OutlineInputBorder(),
               ),
-              items: _fridges
-                  .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                  .toList(),
+              items: _fridges.map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
               value: _selectedFridge,
               onChanged: (v) {
                 if (v != null) {
@@ -211,44 +204,33 @@ class _ManagePageState extends State<ManagePage> {
               },
             ),
             const SizedBox(height: 16),
-
-            // 컴파트먼트 네비게이션
             Row(
               children: [
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
-                  onPressed: _currentCompartment > 0
-                      ? () {
+                  onPressed: _currentCompartment > 0 ? () {
                     _currentCompartment--;
                     _loadItems();
-                  }
-                      : null,
+                  } : null,
                 ),
                 Expanded(
                   child: Center(
                     child: Text(
                       _compartments[_currentCompartment],
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
-                  onPressed: _currentCompartment < _compartments.length - 1
-                      ? () {
+                  onPressed: _currentCompartment < _compartments.length - 1 ? () {
                     _currentCompartment++;
                     _loadItems();
-                  }
-                      : null,
+                  } : null,
                 ),
               ],
             ),
             const SizedBox(height: 8),
-
-            // 냉장고 모양 컨테이너 + Table 칸막이
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
