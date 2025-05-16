@@ -1,57 +1,83 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatelessWidget {
-  TextEditingController controller = TextEditingController();
-  TextEditingController controller2 = TextEditingController();
+  final TextEditingController controller = TextEditingController();
+  final TextEditingController controller2 = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // email, password 입력하는 부분을 제외한 화면을 탭하면, 키보드 사라지게 GestureDetector 사용
       body: GestureDetector(
         onTap: () {
-          FocusScope.of(context).unfocus();
+          FocusScope.of(context).unfocus(); // 키보드 내리기
         },
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(padding: EdgeInsets.only(top: 300)),
-              Form(
-                child: Theme(
-                  data: ThemeData(
-                    primaryColor: Colors.grey,
-                    inputDecorationTheme: InputDecorationTheme(
-                      labelStyle: TextStyle(color: Colors.teal, fontSize: 15.0),
-                    ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "NPG",
+                  style: TextStyle(
+                    fontSize: 50,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.lightBlue,
                   ),
-                  child: Container(
-                    padding: EdgeInsets.all(40.0),
-                    child: Builder(
-                      builder: (context) {
-                        return Column(
-                          children: [
-                            TextField(
-                              controller: controller,
-                              autofocus: true,
-                              decoration: InputDecoration(labelText: 'ID'),
-                              keyboardType: TextInputType.emailAddress,
-                            ),
-                            TextField(
-                              controller: controller2,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
+                ),
+                const SizedBox(height: 40),
+                Form(
+                  child: Theme(
+                    data: ThemeData(
+                      primaryColor: Colors.grey,
+                      inputDecorationTheme: const InputDecorationTheme(
+                        labelStyle:
+                            TextStyle(color: Colors.teal, fontSize: 15.0),
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: Builder(
+                        builder: (context) {
+                          return Column(
+                            children: [
+                              TextField(
+                                controller: controller,
+                                autofocus: true,
+                                decoration:
+                                    const InputDecoration(labelText: 'ID'),
+                                keyboardType: TextInputType.emailAddress,
                               ),
-                              keyboardType: TextInputType.text,
-                              obscureText: true, // 비밀번호 안보이도록 하는 것
-                            ),
-                            SizedBox(height: 40.0),
-                            // 회원가입 버튼
-                            TextButton(onPressed: () {}, child: Text("회원가입")),
-                            ButtonTheme(
-                              minWidth: 100.0,
-                              height: 50.0,
-                              child: ElevatedButton(
+                              TextField(
+                                controller: controller2,
+                                decoration: const InputDecoration(
+                                  labelText: 'Password',
+                                ),
+                                keyboardType: TextInputType.text,
+                                obscureText: true,
+                              ),
+                              const SizedBox(height: 40.0),
+
+                              // 회원가입 버튼
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          RegisterPage(),
+                                    ),
+                                  );
+                                },
+                                child: const Text("회원가입"),
+                              ),
+
+                              const SizedBox(height: 5.0),
+
+                              // 로그인 버튼
+                              ElevatedButton(
                                 onPressed: () {
                                   if (controller.text == 'test@email.com' &&
                                       controller2.text == '1234') {
@@ -66,43 +92,37 @@ class LoginPage extends StatelessWidget {
                                           'test@email.com' &&
                                       controller2.text != '1234') {
                                     showSnackBar(
-                                      context,
-                                      Text('Wrong password'),
-                                    );
-                                    showSnackBar(context, Text('잘못된 비밀번호입니다.'));
+                                        context, const Text('잘못된 비밀번호입니다.'));
                                   } else if (controller.text !=
                                           'test@email.com' &&
                                       controller2.text == '1234') {
-                                    showSnackBar(context, Text('Wrong email'));
                                     showSnackBar(
-                                      context,
-                                      Text('아이디를 확인해 주세요.'),
-                                    );
+                                        context, const Text('아이디를 확인해 주세요.'));
                                   } else {
-                                    showSnackBar(
-                                      context,
-                                      Text('아이디와 비밀번호를 확인해 주세요.'),
-                                    );
+                                    showSnackBar(context,
+                                        const Text('아이디와 비밀번호를 확인해 주세요.'));
                                   }
                                 },
-                                child: Icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.lightBlue,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 25.0, vertical: 8.0),
+                                ),
+                                child: const Icon(
                                   Icons.arrow_forward,
                                   color: Colors.white,
                                   size: 35.0,
                                 ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orangeAccent,
-                                ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -110,10 +130,8 @@ class LoginPage extends StatelessWidget {
   }
 }
 
+// 스낵바 출력 함수
 void showSnackBar(BuildContext context, Text text) {
   final snackBar = SnackBar(content: text, backgroundColor: Colors.red);
-
-  // Find the ScaffoldMessenger in the widget tree
-  // and use it to show a SnackBar.
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
