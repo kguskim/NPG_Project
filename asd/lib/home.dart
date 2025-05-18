@@ -5,23 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
 import 'package:yolo/notice_page.dart';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import 'recipe.dart'; // RecipePage
-import 'manage.dart'; // ManagePage
-import 'login_page.dart'; // LoginPage (로그아웃 후 이동할 페이지)
-=======
-import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
-import 'manage.dart'; //
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
-import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
-import 'manage.dart'; //
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
-import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
-import 'manage.dart'; //
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+import 'recipe.dart';        // RecipePage
+import 'manage.dart';       // ManagePage
+import 'login_page.dart';   // LoginPage (로그아웃 후 이동할 페이지)
 
 /// 공지사항 모델
 class Post {
@@ -43,41 +29,20 @@ class DataService {
   static Future<List<Post>> fetchLatestPosts(int count) async {
     await Future.delayed(const Duration(milliseconds: 500));
     return List.generate(
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
       count,
-      (i) => Post(
+          (i) => Post(
         id: count - i,
         title: '공지 ${count - i}',
         date: DateTime.now().subtract(Duration(days: i)),
       ),
     );
-=======
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-        count,
-        (i) => Post(
-              id: count - i,
-              title: '공지 ${count - i}',
-              date: DateTime.now().subtract(Duration(days: i)),
-            ));
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
   }
 
   static Future<Menu> getTodayMenu() async {
     final candidates = [
       Menu(name: '토마토 스프 파스타', imageUrl: 'https://via.placeholder.com/100'),
-      Menu(name: '크림 리조또', imageUrl: 'https://via.placeholder.com/100'),
-      Menu(name: '카레 라이스', imageUrl: 'https://via.placeholder.com/100'),
+      Menu(name: '크림 리조또',     imageUrl: 'https://via.placeholder.com/100'),
+      Menu(name: '카레 라이스',     imageUrl: 'https://via.placeholder.com/100'),
     ];
     await Future.delayed(const Duration(milliseconds: 300));
     return candidates[Random().nextInt(candidates.length)];
@@ -93,45 +58,20 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
-  late Future<Menu> _menuFuture;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  bool _showLogout = false; // ← 로그아웃 버튼 표시 여부
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+  late Future<Menu>    _menuFuture;
+  bool _showLogout = false;  // 로그아웃 버튼 표시 여부
 
   @override
   void initState() {
     super.initState();
     _postsFuture = DataService.fetchLatestPosts(4);
-    _menuFuture = DataService.getTodayMenu();
+    _menuFuture  = DataService.getTodayMenu();
   }
 
   @override
   Widget build(BuildContext context) {
     final expiredNotice = '바나나 소비기한 임박 2025-05-21';
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    final formattedDate =
-        DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
-=======
-    final now = DateTime.now();
-    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
-    final now = DateTime.now();
-    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
-    final now = DateTime.now();
-    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
 
     return Scaffold(
       body: SafeArea(
@@ -140,19 +80,7 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
               // ─── 상단 알림 + 아이콘들 ───
-=======
-              // 상단 알림 + 아이콘
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
-              // 상단 알림 + 아이콘
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
-              // 상단 알림 + 아이콘
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
               Row(
                 children: [
                   Expanded(
@@ -164,7 +92,9 @@ class _HomePageState extends State<HomePage> {
                   IconButton(
                     icon: const Icon(Icons.person),
                     onPressed: () {
-                      Navigator.pop(context);
+                      setState(() {
+                        _showLogout = !_showLogout;
+                      });
                     },
                   ),
                   IconButton(
@@ -174,8 +104,23 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
 
+              // ─── 토글 상태이면 로그아웃 버튼 노출 ───
+              if (_showLogout)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => LoginPage()),
+                      );
+                    },
+                    child: const Text('LOGOUT'),
+                  ),
+                ),
+
               const SizedBox(height: 8),
-              // 날짜/시간 표시
+
+              // ─── 날짜/시간 표시 ───
               Center(
                 child: Text(
                   formattedDate,
@@ -184,7 +129,8 @@ class _HomePageState extends State<HomePage> {
               ),
 
               const SizedBox(height: 24),
-              // 중앙 버튼 3개
+
+              // ─── 중앙 버튼 3개 ───
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -214,9 +160,7 @@ class _HomePageState extends State<HomePage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const RecipePage(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const RecipePage()),
                       );
                     },
                   ),
@@ -224,7 +168,8 @@ class _HomePageState extends State<HomePage> {
               ),
 
               const SizedBox(height: 32),
-              // 공지사항 + 오늘의 메뉴
+
+              // ─── 공지사항 + 오늘의 메뉴 ───
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -235,17 +180,14 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         const Text(
                           '공지사항',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         FutureBuilder<List<Post>>(
                           future: _postsFuture,
                           builder: (context, snap) {
-                            if (snap.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
+                            if (snap.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
                             }
                             if (snap.hasError || !snap.hasData) {
                               return const Text('공지 로드 실패');
@@ -263,26 +205,7 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-                                        builder: (_) => NoticeBoard(
-                                            noticeId: posts.length - i),
-=======
-                                        builder: (context) => NoticeBoard(
-                                            noticeId:
-                                                posts.length - i), // ID는 1부터 시작
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
-                                        builder: (context) => NoticeBoard(
-                                            noticeId:
-                                                posts.length - i), // ID는 1부터 시작
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
-                                        builder: (context) => NoticeBoard(
-                                            noticeId:
-                                                posts.length - i), // ID는 1부터 시작
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+                                        builder: (_) => NoticeBoard(noticeId: posts.length - i),
                                       ),
                                     );
                                   },
@@ -296,6 +219,7 @@ class _HomePageState extends State<HomePage> {
                   ),
 
                   const SizedBox(width: 24),
+
                   // 오늘의 메뉴
                   Expanded(
                     child: Column(
@@ -303,17 +227,14 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         const Text(
                           '오늘의 메뉴',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         FutureBuilder<Menu>(
                           future: _menuFuture,
                           builder: (context, snap) {
-                            if (snap.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
+                            if (snap.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
                             }
                             if (snap.hasError || !snap.hasData) {
                               return const Text('메뉴 로드 실패');
@@ -321,11 +242,6 @@ class _HomePageState extends State<HomePage> {
                             final menu = snap.data!;
                             return Column(
                               children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    // 상세 레시피 코드
-                                  },
-                                ),
                                 SizedBox(
                                   width: 100,
                                   height: 100,
@@ -334,33 +250,11 @@ class _HomePageState extends State<HomePage> {
                                     child: Image.network(
                                       menu.imageUrl,
                                       fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
+                                      errorBuilder: (context, error, stackTrace) {
                                         return Container(
                                           color: Colors.grey.shade200,
                                           child: const Center(
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-                                            child: Icon(Icons.broken_image,
-                                                size: 48, color: Colors.grey),
-=======
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-                                            child: Icon(
-                                              Icons.broken_image,
-                                              size: 48,
-                                              color: Colors.grey,
-                                            ),
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
-=======
->>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+                                            child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
                                           ),
                                         );
                                       },
