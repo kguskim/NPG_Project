@@ -5,9 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
 import 'package:yolo/notice_page.dart';
+<<<<<<< HEAD
 import 'recipe.dart'; // RecipePage
 import 'manage.dart'; // ManagePage
 import 'login_page.dart'; // LoginPage (로그아웃 후 이동할 페이지)
+=======
+import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
+import 'manage.dart'; //
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 
 /// 공지사항 모델
 class Post {
@@ -29,6 +34,7 @@ class DataService {
   static Future<List<Post>> fetchLatestPosts(int count) async {
     await Future.delayed(const Duration(milliseconds: 500));
     return List.generate(
+<<<<<<< HEAD
       count,
       (i) => Post(
         id: count - i,
@@ -36,6 +42,14 @@ class DataService {
         date: DateTime.now().subtract(Duration(days: i)),
       ),
     );
+=======
+        count,
+        (i) => Post(
+              id: count - i,
+              title: '공지 ${count - i}',
+              date: DateTime.now().subtract(Duration(days: i)),
+            ));
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
   }
 
   static Future<Menu> getTodayMenu() async {
@@ -59,7 +73,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
   late Future<Menu> _menuFuture;
+<<<<<<< HEAD
   bool _showLogout = false; // ← 로그아웃 버튼 표시 여부
+=======
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 
   @override
   void initState() {
@@ -71,8 +88,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final expiredNotice = '바나나 소비기한 임박 2025-05-21';
+<<<<<<< HEAD
     final formattedDate =
         DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
+=======
+    final now = DateTime.now();
+    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 
     return Scaffold(
       body: SafeArea(
@@ -81,7 +103,11 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+<<<<<<< HEAD
               // ─── 상단 알림 + 아이콘들 ───
+=======
+              // 상단 알림 + 아이콘
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
               Row(
                 children: [
                   Expanded(
@@ -90,13 +116,10 @@ class _HomePageState extends State<HomePage> {
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),
-                  // 사용자 아이콘: 누를 때마다 로그아웃 버튼 토글
                   IconButton(
                     icon: const Icon(Icons.person),
                     onPressed: () {
-                      setState(() {
-                        _showLogout = !_showLogout;
-                      });
+                      Navigator.pop(context);
                     },
                   ),
                   IconButton(
@@ -106,24 +129,8 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
 
-              // ─── 토글 상태이면 로그아웃 버튼 노출 ───
-              if (_showLogout)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // 로그인 화면으로 대체 네비게이션
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => LoginPage()),
-                      );
-                    },
-                    child: const Text('LOGOUT'),
-                  ),
-                ),
-
               const SizedBox(height: 8),
-
-              // ─── 날짜/시간 표시 ───
+              // 날짜/시간 표시
               Center(
                 child: Text(
                   formattedDate,
@@ -132,8 +139,7 @@ class _HomePageState extends State<HomePage> {
               ),
 
               const SizedBox(height: 24),
-
-              // ─── 중앙 버튼 3개 ───
+              // 중앙 버튼 3개
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -163,7 +169,9 @@ class _HomePageState extends State<HomePage> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const RecipePage()),
+                        MaterialPageRoute(
+                          builder: (_) => const RecipePage(),
+                        ),
                       );
                     },
                   ),
@@ -171,8 +179,7 @@ class _HomePageState extends State<HomePage> {
               ),
 
               const SizedBox(height: 32),
-
-              // ─── 공지사항 + 오늘의 메뉴 ───
+              // 공지사항 + 오늘의 메뉴
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -211,8 +218,14 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
+<<<<<<< HEAD
                                         builder: (_) => NoticeBoard(
                                             noticeId: posts.length - i),
+=======
+                                        builder: (context) => NoticeBoard(
+                                            noticeId:
+                                                posts.length - i), // ID는 1부터 시작
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
                                       ),
                                     );
                                   },
@@ -226,7 +239,6 @@ class _HomePageState extends State<HomePage> {
                   ),
 
                   const SizedBox(width: 24),
-
                   // 오늘의 메뉴
                   Expanded(
                     child: Column(
@@ -270,8 +282,16 @@ class _HomePageState extends State<HomePage> {
                                         return Container(
                                           color: Colors.grey.shade200,
                                           child: const Center(
+<<<<<<< HEAD
                                             child: Icon(Icons.broken_image,
                                                 size: 48, color: Colors.grey),
+=======
+                                            child: Icon(
+                                              Icons.broken_image,
+                                              size: 48,
+                                              color: Colors.grey,
+                                            ),
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
                                           ),
                                         );
                                       },
