@@ -8,6 +8,7 @@ import 'package:yolo/notice_page.dart';
 import 'recipe.dart';        // RecipePage
 import 'manage.dart';       // ManagePage
 import 'login_page.dart';   // LoginPage (로그아웃 후 이동할 페이지)
+import 'widgets/to_buy_section.dart';  // 방금 구현한 위젯
 
 /// 공지사항 모델
 class Post {
@@ -59,7 +60,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
   late Future<Menu>    _menuFuture;
-  bool _showLogout = false;  // 로그아웃 버튼 표시 여부
+
+  // 구매 메모 리스트 (로컬에 보관하려면 SharedPreferences 등 추가)
+  List<String> _toBuy = [];
 
   @override
   void initState() {
@@ -68,10 +71,39 @@ class _HomePageState extends State<HomePage> {
     _menuFuture  = DataService.getTodayMenu();
   }
 
+  void _addItem() async {
+    final input = await showDialog<String>(
+      context: context,
+      builder: (_) {
+        String text = '';
+        return AlertDialog(
+          title: const Text('추가할 식재료'),
+          content: TextField(
+            autofocus: true,
+            decoration: const InputDecoration(hintText: '예: 토마토 2개'),
+            onChanged: (v) => text = v,
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+            TextButton(onPressed: () => Navigator.pop(context, text), child: const Text('추가')),
+          ],
+        );
+      },
+    );
+    if (input != null && input.trim().isNotEmpty) {
+      setState(() => _toBuy.add(input.trim()));
+    }
+  }
+
+  void _removeItem(String txt) {
+    setState(() => _toBuy.remove(txt));
+  }
+
   @override
   Widget build(BuildContext context) {
     final expiredNotice = '바나나 소비기한 임박 2025-05-21';
-    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
+    final formattedDate =
+    DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
 
     return Scaffold(
       body: SafeArea(
@@ -80,197 +112,126 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ─── 상단 알림 + 아이콘들 ───
+              // ── 상단 알림 + 아이콘 ──
               Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      expiredNotice,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
+                  Expanded(child: Text(expiredNotice, style: const TextStyle(fontSize: 14))),
                   IconButton(
                     icon: const Icon(Icons.person),
-                    onPressed: () {
-                      setState(() {
-                        _showLogout = !_showLogout;
-                      });
-                    },
+                    onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => LoginPage()),
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.settings),
-                    onPressed: () {},
-                  ),
+                  IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
                 ],
               ),
 
-              // ─── 토글 상태이면 로그아웃 버튼 노출 ───
-              if (_showLogout)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => LoginPage()),
-                      );
-                    },
-                    child: const Text('LOGOUT'),
-                  ),
-                ),
-
               const SizedBox(height: 8),
 
-              // ─── 날짜/시간 표시 ───
-              Center(
-                child: Text(
-                  formattedDate,
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
+              // ── 날짜/시간 ──
+              Center(child: Text(formattedDate, style: const TextStyle(fontSize: 16))),
 
               const SizedBox(height: 24),
 
-              // ─── 중앙 버튼 3개 ───
+              // ── 중앙 버튼 ──
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _NavButton(
-                    icon: Icons.emoji_food_beverage,
-                    label: '재료',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const App()),
-                      );
-                    },
-                  ),
-                  _NavButton(
-                    icon: Icons.kitchen,
-                    label: '냉장고 관리',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ManagePage()),
-                      );
-                    },
-                  ),
-                  _NavButton(
-                    icon: Icons.menu_book,
-                    label: '레시피',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const RecipePage()),
-                      );
-                    },
-                  ),
+                  _NavButton(icon: Icons.emoji_food_beverage, label: '재료', onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const App()));
+                  }),
+                  _NavButton(icon: Icons.kitchen,             label: '냉장고 관리', onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ManagePage()));
+                  }),
+                  _NavButton(icon: Icons.menu_book,           label: '레시피', onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const RecipePage()));
+                  }),
                 ],
               ),
 
               const SizedBox(height: 32),
 
-              // ─── 공지사항 + 오늘의 메뉴 ───
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 공지사항
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          '공지사항',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        FutureBuilder<List<Post>>(
-                          future: _postsFuture,
-                          builder: (context, snap) {
-                            if (snap.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
-                            if (snap.hasError || !snap.hasData) {
-                              return const Text('공지 로드 실패');
-                            }
-                            final posts = snap.data!;
-                            return ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: posts.length,
-                              separatorBuilder: (_, __) => const Divider(),
-                              itemBuilder: (context, i) {
-                                return ListTile(
-                                  title: Text(posts[i].title),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => NoticeBoard(noticeId: posts.length - i),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
+              // ── 공지사항 + 오늘의 메뉴 ──
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 공지사항 (불릿 리스트)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('공지사항',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          FutureBuilder<List<Post>>(
+                            future: _postsFuture,
+                            builder: (ctx, snap) {
+                              if (snap.connectionState != ConnectionState.done ||
+                                  snap.hasError ||
+                                  snap.data!.isEmpty) {
+                                return const Text('공지 로드 실패');
+                              }
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: snap.data!
+                                    .map((p) => Text('• ${p.title}'))
+                                    .toList(),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(width: 24),
+                    const SizedBox(width: 24),
 
-                  // 오늘의 메뉴
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Text(
-                          '오늘의 메뉴',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        FutureBuilder<Menu>(
-                          future: _menuFuture,
-                          builder: (context, snap) {
-                            if (snap.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
-                            if (snap.hasError || !snap.hasData) {
-                              return const Text('메뉴 로드 실패');
-                            }
-                            final menu = snap.data!;
-                            return Column(
-                              children: [
-                                SizedBox(
-                                  width: 100,
-                                  height: 100,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      menu.imageUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey.shade200,
-                                          child: const Center(
-                                            child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
+                    // 오늘의 메뉴 (영역 고정)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text('오늘의 메뉴',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          FutureBuilder<Menu>(
+                            future: _menuFuture,
+                            builder: (ctx, snap) {
+                              return Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(menu.name),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
+                                child: (snap.connectionState == ConnectionState.done &&
+                                    snap.hasData)
+                                    ? Image.network(snap.data!.imageUrl, fit: BoxFit.cover,
+                                    errorBuilder: (_,__,___)=>const Icon(Icons.broken_image))
+                                    : const SizedBox.shrink(),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          FutureBuilder<Menu>(
+                            future: _menuFuture,
+                            builder: (ctx, snap) =>
+                                Text(snap.hasData ? snap.data!.name : ''),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // ── 구매가 필요한 식재료 ──
+              ToBuySection(
+                items: _toBuy,
+                onAdd: _addItem,
+                onRemove: _removeItem,
               ),
             ],
           ),
@@ -280,31 +241,22 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// 네비게이션 버튼 위젯
+/// 네비 버튼
 class _NavButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-
-  const _NavButton({
-    Key? key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  }) : super(key: key);
-
+  const _NavButton({Key? key, required this.icon, required this.label, required this.onTap})
+      : super(key: key);
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext c) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade100,
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(color: Colors.blue.shade100, borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, size: 32, color: Colors.blue),
           ),
           const SizedBox(height: 8),
