@@ -6,9 +6,14 @@ import 'package:intl/intl.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
 import 'package:yolo/notice_page.dart';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import 'recipe.dart'; // RecipePage
 import 'manage.dart'; // ManagePage
 import 'login_page.dart'; // LoginPage (로그아웃 후 이동할 페이지)
+=======
+import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
+import 'manage.dart'; //
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
 import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
 import 'manage.dart'; //
@@ -40,6 +45,7 @@ class DataService {
     return List.generate(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       count,
       (i) => Post(
         id: count - i,
@@ -50,6 +56,8 @@ class DataService {
 =======
 =======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+=======
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
         count,
         (i) => Post(
               id: count - i,
@@ -57,6 +65,9 @@ class DataService {
               date: DateTime.now().subtract(Duration(days: i)),
             ));
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+=======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
@@ -85,7 +96,10 @@ class _HomePageState extends State<HomePage> {
   late Future<Menu> _menuFuture;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   bool _showLogout = false; // ← 로그아웃 버튼 표시 여부
+=======
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
@@ -103,8 +117,13 @@ class _HomePageState extends State<HomePage> {
     final expiredNotice = '바나나 소비기한 임박 2025-05-21';
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     final formattedDate =
         DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
+=======
+    final now = DateTime.now();
+    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
     final now = DateTime.now();
     final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
@@ -123,7 +142,11 @@ class _HomePageState extends State<HomePage> {
             children: [
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
               // ─── 상단 알림 + 아이콘들 ───
+=======
+              // 상단 알림 + 아이콘
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
               // 상단 알림 + 아이콘
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
@@ -242,8 +265,14 @@ class _HomePageState extends State<HomePage> {
                                       MaterialPageRoute(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                                         builder: (_) => NoticeBoard(
                                             noticeId: posts.length - i),
+=======
+                                        builder: (context) => NoticeBoard(
+                                            noticeId:
+                                                posts.length - i), // ID는 1부터 시작
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
                                         builder: (context) => NoticeBoard(
                                             noticeId:
@@ -312,9 +341,12 @@ class _HomePageState extends State<HomePage> {
                                           child: const Center(
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                                             child: Icon(Icons.broken_image,
                                                 size: 48, color: Colors.grey),
 =======
+=======
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
                                             child: Icon(
@@ -323,6 +355,9 @@ class _HomePageState extends State<HomePage> {
                                               color: Colors.grey,
                                             ),
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+=======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
