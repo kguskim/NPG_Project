@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
+import 'package:yolo/notice_page.dart';
 import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
 import 'manage.dart'; //
 
@@ -182,7 +183,19 @@ class _HomePageState extends State<HomePage> {
                               itemCount: posts.length,
                               separatorBuilder: (_, __) => const Divider(),
                               itemBuilder: (context, i) {
-                                return Text(posts[i].title);
+                                return ListTile(
+                                  title: Text(posts[i].title),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => NoticeBoard(
+                                            noticeId:
+                                                posts.length - i), // ID는 1부터 시작
+                                      ),
+                                    );
+                                  },
+                                );
                               },
                             );
                           },
