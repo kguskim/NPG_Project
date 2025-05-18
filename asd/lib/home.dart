@@ -3,11 +3,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:yolo/detailed_recipe.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
+import 'package:yolo/models/recipe_model.dart';
 import 'package:yolo/notice_page.dart';
-import 'recipe.dart';            // RecipePage
-import 'manage.dart';           // ManagePage
-import 'login_page.dart';            // LoginPage (로그아웃 후 이동할 페이지)
+import 'recipe.dart'; // RecipePage
+import 'manage.dart'; // ManagePage
+import 'login_page.dart'; // LoginPage (로그아웃 후 이동할 페이지)
 
 /// 공지사항 모델
 class Post {
@@ -30,7 +32,7 @@ class DataService {
     await Future.delayed(const Duration(milliseconds: 500));
     return List.generate(
       count,
-          (i) => Post(
+      (i) => Post(
         id: count - i,
         title: '공지 ${count - i}',
         date: DateTime.now().subtract(Duration(days: i)),
@@ -41,8 +43,8 @@ class DataService {
   static Future<Menu> getTodayMenu() async {
     final candidates = [
       Menu(name: '토마토 스프 파스타', imageUrl: 'https://via.placeholder.com/100'),
-      Menu(name: '크림 리조또',    imageUrl: 'https://via.placeholder.com/100'),
-      Menu(name: '카레 라이스',    imageUrl: 'https://via.placeholder.com/100'),
+      Menu(name: '크림 리조또', imageUrl: 'https://via.placeholder.com/100'),
+      Menu(name: '카레 라이스', imageUrl: 'https://via.placeholder.com/100'),
     ];
     await Future.delayed(const Duration(milliseconds: 300));
     return candidates[Random().nextInt(candidates.length)];
@@ -58,20 +60,21 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
-  late Future<Menu>    _menuFuture;
+  late Future<Menu> _menuFuture;
   bool _showLogout = false; // ← 로그아웃 버튼 표시 여부
 
   @override
   void initState() {
     super.initState();
     _postsFuture = DataService.fetchLatestPosts(4);
-    _menuFuture  = DataService.getTodayMenu();
+    _menuFuture = DataService.getTodayMenu();
   }
 
   @override
   Widget build(BuildContext context) {
     final expiredNotice = '바나나 소비기한 임박 2025-05-21';
-    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
+    final formattedDate =
+        DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
 
     return Scaffold(
       body: SafeArea(
@@ -80,7 +83,6 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-
               // ─── 상단 알림 + 아이콘들 ───
               Row(
                 children: [
@@ -183,14 +185,17 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         const Text(
                           '공지사항',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         FutureBuilder<List<Post>>(
                           future: _postsFuture,
                           builder: (context, snap) {
-                            if (snap.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
+                            if (snap.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
                             }
                             if (snap.hasError || !snap.hasData) {
                               return const Text('공지 로드 실패');
@@ -208,7 +213,8 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => NoticeBoard(noticeId: posts.length - i),
+                                        builder: (_) => NoticeBoard(
+                                            noticeId: posts.length - i),
                                       ),
                                     );
                                   },
@@ -230,43 +236,42 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         const Text(
                           '오늘의 메뉴',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         FutureBuilder<Menu>(
                           future: _menuFuture,
                           builder: (context, snap) {
-                            if (snap.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
+                            if (snap.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
                             }
                             if (snap.hasError || !snap.hasData) {
                               return const Text('메뉴 로드 실패');
                             }
                             final menu = snap.data!;
-                            return Column(
-                              children: [
-                                SizedBox(
-                                  width: 100,
-                                  height: 100,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      menu.imageUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey.shade200,
-                                          child: const Center(
-                                            child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
+                            GestureDetector(
+                              onTap: () {
+                                // Detailed Recipe 이동 코드
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  menu.imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey.shade200,
+                                      child: const Center(
+                                        child: Icon(Icons.broken_image,
+                                            size: 48, color: Colors.grey),
+                                      ),
+                                    );
+                                  },
                                 ),
-                                const SizedBox(height: 8),
-                                Text(menu.name),
-                              ],
+                              ),
                             );
                           },
                         ),

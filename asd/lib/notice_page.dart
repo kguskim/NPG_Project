@@ -108,8 +108,9 @@ class _NoticeBoardState extends State<NoticeBoard> {
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
-                        height: 650, // 원하는 고정 높이 설정
-                        width: 500,
+                        height: MediaQuery.of(context).size.height *
+                            0.7, // 원하는 고정 높이 설정
+                        width: MediaQuery.of(context).size.width * 0.9,
                         child: Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey),
