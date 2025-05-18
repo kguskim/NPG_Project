@@ -5,9 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
 import 'package:yolo/notice_page.dart';
+<<<<<<< HEAD
 import 'recipe.dart'; // RecipePage
 import 'manage.dart'; // ManagePage
 import 'login_page.dart'; // LoginPage (로그아웃 후 이동할 페이지)
+=======
+import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
+import 'manage.dart'; //
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
 import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
 import 'manage.dart'; //
@@ -34,6 +39,7 @@ class DataService {
     await Future.delayed(const Duration(milliseconds: 500));
     return List.generate(
 <<<<<<< HEAD
+<<<<<<< HEAD
       count,
       (i) => Post(
         id: count - i,
@@ -42,12 +48,17 @@ class DataService {
       ),
     );
 =======
+=======
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
         count,
         (i) => Post(
               id: count - i,
               title: '공지 ${count - i}',
               date: DateTime.now().subtract(Duration(days: i)),
             ));
+<<<<<<< HEAD
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+=======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
   }
 
@@ -73,7 +84,10 @@ class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
   late Future<Menu> _menuFuture;
 <<<<<<< HEAD
+<<<<<<< HEAD
   bool _showLogout = false; // ← 로그아웃 버튼 표시 여부
+=======
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 
@@ -88,8 +102,13 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final expiredNotice = '바나나 소비기한 임박 2025-05-21';
 <<<<<<< HEAD
+<<<<<<< HEAD
     final formattedDate =
         DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
+=======
+    final now = DateTime.now();
+    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
     final now = DateTime.now();
     final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
@@ -103,7 +122,11 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
 <<<<<<< HEAD
+<<<<<<< HEAD
               // ─── 상단 알림 + 아이콘들 ───
+=======
+              // 상단 알림 + 아이콘
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
               // 상단 알림 + 아이콘
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
@@ -218,8 +241,14 @@ class _HomePageState extends State<HomePage> {
                                       context,
                                       MaterialPageRoute(
 <<<<<<< HEAD
+<<<<<<< HEAD
                                         builder: (_) => NoticeBoard(
                                             noticeId: posts.length - i),
+=======
+                                        builder: (context) => NoticeBoard(
+                                            noticeId:
+                                                posts.length - i), // ID는 1부터 시작
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
 =======
                                         builder: (context) => NoticeBoard(
                                             noticeId:
@@ -282,14 +311,20 @@ class _HomePageState extends State<HomePage> {
                                           color: Colors.grey.shade200,
                                           child: const Center(
 <<<<<<< HEAD
+<<<<<<< HEAD
                                             child: Icon(Icons.broken_image,
                                                 size: 48, color: Colors.grey),
 =======
+=======
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
                                             child: Icon(
                                               Icons.broken_image,
                                               size: 48,
                                               color: Colors.grey,
                                             ),
+<<<<<<< HEAD
+>>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
+=======
 >>>>>>> parent of 41070ffb (로그아웃 버튼 추가)
                                           ),
                                         );
