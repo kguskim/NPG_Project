@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yolo/notice_page.dart';
 import 'recipe.dart';        // RecipePage
 import 'manage.dart';       // ManagePage
@@ -64,11 +65,24 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _loadToBuy();                   // ← 여기에 로컬에 저장된 리스트를 불러옵니다.
     _postsFuture = DataService.fetchLatestPosts(4);
     _menuFuture  = DataService.getTodayMenu();
   }
+  // 2) SharedPreferences에서 불러오기
+  Future<void> _loadToBuy() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList('toBuy') ?? [];
+    setState(() => _toBuy = saved);
+  }
 
-  void _addItem() async {
+  // 3) SharedPreferences에 저장하기
+  Future<void> _saveToBuy() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('toBuy', _toBuy);
+  }
+
+  Future<void> _addItem() async {
     final input = await showDialog<String>(
       context: context,
       builder: (_) {
@@ -89,11 +103,13 @@ class _HomePageState extends State<HomePage> {
     );
     if (input != null && input.trim().isNotEmpty) {
       setState(() => _toBuy.add(input.trim()));
+      await _saveToBuy();        // ← 리스트 변경 후 바로 저장
     }
   }
 
-  void _removeItem(String txt) {
+  Future<void> _removeItem(String txt) async {
     setState(() => _toBuy.remove(txt));
+    await _saveToBuy();            // ← 삭제 후에도 저장
   }
 
   @override
