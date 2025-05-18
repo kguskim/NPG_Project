@@ -7,29 +7,25 @@ import 'package:yolo/food_ingredient_detection_page.dart';
 import 'package:yolo/notice_page.dart';
 import 'recipe.dart';        // RecipePage
 import 'manage.dart';       // ManagePage
-import 'login_page.dart';   // LoginPage (로그아웃 후 이동할 페이지)
-import 'widgets/to_buy_section.dart';  // 방금 구현한 위젯
+import 'login_page.dart';   // LoginPage
+import 'widgets/to_buy_section.dart';
 
 /// 공지사항 모델
 class Post {
   final int id;
   final String title;
   final DateTime date;
-  Post({
-    required this.id,
-    required this.title,
-    required this.date,
-  });
+  Post({ required this.id, required this.title, required this.date });
 }
 
 /// 오늘의 메뉴 모델
 class Menu {
   final String name;
   final String imageUrl;
-  Menu({required this.name, required this.imageUrl});
+  Menu({ required this.name, required this.imageUrl });
 }
 
-/// 데이터 서비스 (더미)
+/// 더미 데이터 서비스
 class DataService {
   static Future<List<Post>> fetchLatestPosts(int count) async {
     await Future.delayed(const Duration(milliseconds: 500));
@@ -63,8 +59,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
   late Future<Menu>    _menuFuture;
-
-  // 구매 메모 리스트 (로컬에 보관하려면 SharedPreferences 등 추가)
   List<String> _toBuy = [];
 
   @override
@@ -109,6 +103,44 @@ class _HomePageState extends State<HomePage> {
     DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('홈'),
+        actions: [
+          // 유저 아이콘 → showMenu 로 아이콘 바로 아래에 메뉴 띄우기
+          Builder(builder: (ctx) {
+            return IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () async {
+                // 버튼과 오버레이(RenderBox) 가져오기
+                final RenderBox button = ctx.findRenderObject() as RenderBox;
+                final RenderBox overlay = Overlay.of(ctx).context.findRenderObject() as RenderBox;
+                // 버튼의 글로벌 위치 계산
+                final Offset pos = button.localToGlobal(Offset.zero, ancestor: overlay);
+                // 메뉴 띄우기 (아이콘 바로 아래)
+                final selected = await showMenu<String>(
+                  context: ctx,
+                  position: RelativeRect.fromLTRB(
+                    pos.dx,
+                    pos.dy + button.size.height,
+                    pos.dx + button.size.width,
+                    pos.dy,
+                  ),
+                  items: [
+                    const PopupMenuItem(value: 'logout', child: Text('LOGOUT')),
+                  ],
+                );
+                if (selected == 'logout') {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => LoginPage()),
+                  );
+                }
+              },
+            );
+          }),
+          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
+        ],
+      ),
+
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -120,56 +152,51 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ── 상단 알림 + 아이콘 ──
-                    Row(
-                      children: [
-                        Expanded(child: Text(expiredNotice, style: const TextStyle(fontSize: 14))),
-                        IconButton(
-                          icon: const Icon(Icons.person),
-                          onPressed: () => Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => LoginPage()),
-                          ),
-                        ),
-                        IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
-                      ],
-                    ),
-
+                    Text(expiredNotice, style: const TextStyle(fontSize: 14)),
                     const SizedBox(height: 8),
-
-                    // ── 날짜/시간 ──
                     Center(child: Text(formattedDate, style: const TextStyle(fontSize: 16))),
-
                     const SizedBox(height: 24),
-
-                    // ── 중앙 버튼 ──
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _NavButton(icon: Icons.emoji_food_beverage, label: '재료', onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const App()));
-                        }),
-                        _NavButton(icon: Icons.kitchen, label: '냉장고 관리', onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ManagePage()));
-                        }),
-                        _NavButton(icon: Icons.menu_book, label: '레시피', onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RecipePage()));
-                        }),
+                        _NavButton(
+                          icon: Icons.emoji_food_beverage,
+                          label: '재료',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const App()),
+                          ),
+                        ),
+                        _NavButton(
+                          icon: Icons.kitchen,
+                          label: '냉장고 관리',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ManagePage()),
+                          ),
+                        ),
+                        _NavButton(
+                          icon: Icons.menu_book,
+                          label: '레시피',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const RecipePage()),
+                          ),
+                        ),
                       ],
                     ),
-
                     const SizedBox(height: 32),
 
-                    // ── 공지사항 + 오늘의 메뉴 ──
                     IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 공지사항 (불릿 리스트)
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('공지사항', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                const Text('공지사항',
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 8),
                                 FutureBuilder<List<Post>>(
                                   future: _postsFuture,
@@ -190,10 +217,7 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                           ),
-
                           const SizedBox(width: 24),
-
-                          // 오늘의 메뉴 (영역 고정)
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -211,21 +235,18 @@ class _HomePageState extends State<HomePage> {
                                         color: Colors.grey.shade200,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: (snap.connectionState == ConnectionState.done &&
-                                          snap.hasData)
+                                      child: (snap.connectionState == ConnectionState.done && snap.hasData)
                                           ? Image.network(snap.data!.imageUrl, fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                          const Icon(Icons.broken_image))
+                                          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image))
                                           : const SizedBox.shrink(),
                                     );
                                   },
                                 ),
                                 const SizedBox(height: 8),
                                 FutureBuilder<Menu>(
-                                  future: _menuFuture,
-                                  builder: (ctx, snap) =>
-                                      Text(snap.hasData ? snap.data!.name : ''),
-                                ),
+                                    future: _menuFuture,
+                                    builder: (ctx, snap) =>
+                                        Text(snap.hasData ? snap.data!.name : '')),
                               ],
                             ),
                           ),
@@ -234,8 +255,6 @@ class _HomePageState extends State<HomePage> {
                     ),
 
                     const SizedBox(height: 32),
-
-                    // (다른 콘텐츠가 더 있다면 여기에 추가)
                   ],
                 ),
               ),
@@ -258,7 +277,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// 네비 버튼
+/// 네비 버튼 위젯
 class _NavButton extends StatelessWidget {
   final IconData icon;
   final String label;
