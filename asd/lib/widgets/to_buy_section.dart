@@ -31,35 +31,32 @@ class ToBuySection extends StatelessWidget {
         const SizedBox(height: 8),
         // 고정 크기 박스 + 내부 스크롤
         Container(
-          constraints: const BoxConstraints(
-            minHeight: 80,
-            maxHeight: 160,  // 3~4줄 정도 보이도록
-          ),
+          width: double.infinity,
+          // 1) 세로 길이 고정
+          height: 160,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
           ),
           child: items.isEmpty
-              ? const Center(child: Text('메모가 없습니다.'))
+              ? const Center(child: Text('추가된 식재료가 없습니다.'))
               : Scrollbar(
+            // 스크롤바 보이도록
             thumbVisibility: true,
-            child: ListView.separated(
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (ctx, i) {
-                final txt = items[i];
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('• $txt'),
-                    GestureDetector(
-                      onTap: () => onRemove(txt),
-                      child: const Icon(Icons.close, size: 18),
-                    ),
-                  ],
-                );
-              },
+            child: SingleChildScrollView(
+              // 2) 내용이 container 높이를 넘으면 세로 스크롤
+              child: Wrap(
+                spacing: 8,    // 칩 간 가로 간격
+                runSpacing: 4, // 칩 간 세로 간격
+                children: items.map((item) {
+                  return Chip(
+                    label: Text(item),
+                    deleteIcon: const Icon(Icons.close, size: 18),
+                    onDeleted: () => onRemove(item),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ),
