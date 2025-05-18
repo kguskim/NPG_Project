@@ -3,9 +3,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:yolo/detailed_recipe.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
-import 'package:yolo/models/recipe_model.dart';
 import 'package:yolo/notice_page.dart';
 import 'recipe.dart'; // RecipePage
 import 'manage.dart'; // ManagePage
@@ -252,26 +250,37 @@ class _HomePageState extends State<HomePage> {
                               return const Text('메뉴 로드 실패');
                             }
                             final menu = snap.data!;
-                            GestureDetector(
-                              onTap: () {
-                                // Detailed Recipe 이동 코드
-                              },
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  menu.imageUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: Colors.grey.shade200,
-                                      child: const Center(
-                                        child: Icon(Icons.broken_image,
-                                            size: 48, color: Colors.grey),
-                                      ),
-                                    );
+                            return Column(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    // 상세 레시피 코드
                                   },
                                 ),
-                              ),
+                                SizedBox(
+                                  width: 100,
+                                  height: 100,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      menu.imageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          color: Colors.grey.shade200,
+                                          child: const Center(
+                                            child: Icon(Icons.broken_image,
+                                                size: 48, color: Colors.grey),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(menu.name),
+                              ],
                             );
                           },
                         ),
