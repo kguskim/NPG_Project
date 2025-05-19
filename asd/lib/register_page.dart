@@ -1,17 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController idController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+
+  Future<void> registerUser() async {
+    final url = Uri.parse(
+        'https://3d57-121-188-29-7.ngrok-free.app/users/register'); // 여기를 실제 서버 주소로 변경하세요
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'user_id': idController.text,
+        'password': passwordController.text,
+        'user_email': emailController.text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 성공
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('회원가입 성공')),
+      );
+      Navigator.pop(context);
+    } else {
+      // 실패
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('회원가입 실패: ${response.reasonPhrase}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.arrow_back)),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -34,6 +76,7 @@ class RegisterPage extends StatelessWidget {
 
               // ID 입력 필드
               TextField(
+                controller: idController,
                 decoration: InputDecoration(
                   hintText: 'ID',
                   border: OutlineInputBorder(
@@ -45,6 +88,7 @@ class RegisterPage extends StatelessWidget {
 
               // Password 입력 필드
               TextField(
+                controller: passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: 'Password',
@@ -60,9 +104,10 @@ class RegisterPage extends StatelessWidget {
                 children: [
                   const Icon(Icons.email, color: Colors.grey),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      controller: emailController,
+                      decoration: const InputDecoration(
                         hintText: '이메일',
                         border: InputBorder.none,
                       ),
@@ -77,9 +122,10 @@ class RegisterPage extends StatelessWidget {
                 children: [
                   const Icon(Icons.phone, color: Colors.grey),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      controller: phoneController,
+                      decoration: const InputDecoration(
                         hintText: '전화번호',
                         border: InputBorder.none,
                       ),
@@ -89,14 +135,15 @@ class RegisterPage extends StatelessWidget {
               ),
               const Divider(),
 
-              // 이미지 업로드 Placeholder
+              // 이름 필드
               Row(
                 children: [
                   const Icon(Icons.image, color: Colors.grey),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      controller: nameController,
+                      decoration: const InputDecoration(
                         hintText: '이름',
                         border: InputBorder.none,
                       ),
@@ -109,9 +156,7 @@ class RegisterPage extends StatelessWidget {
 
               // 등록 버튼
               ElevatedButton(
-                onPressed: () {
-                  // 등록 버튼 클릭 시 동작
-                },
+                onPressed: registerUser,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.lightBlue,
                   padding:
