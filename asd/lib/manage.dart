@@ -55,7 +55,7 @@ class _ManagePageState extends State<ManagePage> {
   final TextEditingController _searchController = TextEditingController();
   // 냉장고 종류 드롭다운
   final List<String> _fridges = ['SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L', 'LG 모던엣지 냉장고 462L', '친구 냉장고'];
-  String _selectedFridge = '집 냉장고';
+  String _selectedFridge = 'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L';
 
   // 컴파트먼트(구획)
   final List<String> _compartments = ['냉장실', '냉동실', '문칸 상단', '문칸 하단'];
