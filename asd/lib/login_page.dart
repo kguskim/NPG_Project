@@ -15,13 +15,12 @@ class LoginPage extends StatelessWidget {
 
     try {
       final url = Uri.parse(
-          'https://3d57-121-188-29-7.ngrok-free.app/users/register'); // 실제 주소로 바꿔주세요
+          'https://3d57-121-188-29-7.ngrok-free.app/users/login'); // 실제 주소로 바꿔주세요
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'user_id': id, 'password': password}),
       );
-
       if (response.statusCode == 200 && response.body == 'success') {
         Navigator.push(
           context,

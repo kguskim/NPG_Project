@@ -13,19 +13,17 @@ class GridConfig {
 
 /// 냉장고 종류 & 구획별 행×열 설정
 const Map<String, Map<String, GridConfig>> fridgeLayouts = {
-  '집 냉장고': {
-    '냉장실':    GridConfig(3, 2),
-    '냉동실':    GridConfig(2, 2),
-    '문칸 상단': GridConfig(1, 3),
-    '문칸 하단': GridConfig(2, 3),
+  'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L': {
+    '냉장실':    GridConfig(5, 1),
+    '냉동실':    GridConfig(3, 1),
+    '냉장실 문칸': GridConfig(3, 1)
   },
-  '사무실 냉장고': {
-    '냉장실':    GridConfig(2, 3),
-    '냉동실':    GridConfig(1, 2),
-    '문칸 상단': GridConfig(1, 2),
-    '문칸 하단': GridConfig(1, 2),
+  'LG 모던엣지 냉장고 462L': {
+    '냉장실':    GridConfig(5, 1),
+    '냉동실':    GridConfig(3, 1),
+    '냉장실 문칸': GridConfig(4, 2)
   },
-  '친구 냉장고': {
+  '신규 냉장고': {
     '냉장실':    GridConfig(2, 2),
     '냉동실':    GridConfig(2, 1),
     '문칸 상단': GridConfig(1, 2),
@@ -54,8 +52,9 @@ class ManagePage extends StatefulWidget {
 }
 
 class _ManagePageState extends State<ManagePage> {
+  final TextEditingController _searchController = TextEditingController();
   // 냉장고 종류 드롭다운
-  final List<String> _fridges = ['집 냉장고', '사무실 냉장고', '친구 냉장고'];
+  final List<String> _fridges = ['SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L', 'LG 모던엣지 냉장고 462L', '친구 냉장고'];
   String _selectedFridge = '집 냉장고';
 
   // 컴파트먼트(구획)
