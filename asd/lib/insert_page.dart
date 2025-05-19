@@ -1,8 +1,9 @@
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
 import 'package:yolo/home.dart';
-
+import 'manage.dart';
 class InsertPage extends StatefulWidget {
   final String data;
   final String imagePath;
@@ -25,15 +26,24 @@ class InsertPageState extends State<InsertPage> {
 
   final List<String> categories = ['감자류', '견과종실류', '곡류', '과일류', '난류', '당류', '두류', '버섯류',
     '어패류', '유제품', '유지류', '육류', '음료류','조리가공식품류','조미료류','주류','차류','채소류','해조류','기타'];
-  final List<String> locations = [
-    '냉장 1층',
-    '냉장 2층',
-    '냉장 3층',
-    '냉장 4층',
-    '냉장 5층',
-    '냉동실'
-  ];
-
+  late String selectedFridgeFromManage;
+  late String selectedLocation;
+  List<String> get locations =>
+      fridgeLayouts[selectedFridgeFromManage]?.keys.toList() ?? [];
+  @override
+  void initState() {
+    super.initState();
+    _loadLastFridge();
+  }
+  Future<void> _loadLastFridge() async {
+    final prefs = await SharedPreferences.getInstance();
+    final fridgeName = prefs.getString('last_selected_fridge') ??
+        fridgeLayouts.keys.first;
+    setState(() {
+      selectedFridgeFromManage = fridgeName;
+      selectedLocation = locations.first;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     String selectedCategory = categories[0];

@@ -3,7 +3,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
+
+void _saveFridgeName(String fridgeName) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('last_selected_fridge', fridgeName);
+}
 /// 칸막이 설정 클래스
 class GridConfig {
   final int rows;
@@ -206,6 +212,7 @@ class _ManagePageState extends State<ManagePage> {
                     _selectedFridge = v;
                     _currentCompartment = 0; // 인덱스 초기화
                     _loadItems();
+                    _saveFridgeName(v); // 냉장고 이름 저장
                   });
                 }
               },
