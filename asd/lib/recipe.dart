@@ -1,21 +1,35 @@
 // lib/recipe.dart
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'models/recipe_model.dart';
 import 'services/recipe_extraction.dart';
 import 'detailed_recipe.dart';
 
+
 /// 레시피 추천 페이지 (항상 3개 순환 캐러셀 + 기존 UI 틀 유지)
 class RecipePage extends StatefulWidget {
-  const RecipePage({Key? key}) : super(key: key);
+  final String userId;
+  const RecipePage({Key? key, required this.userId}) : super(key: key);
   @override
   _RecipePageState createState() => _RecipePageState();
 }
+// API 요청 함수 수정
+Future<List<RecipeModel>> fetchUserRecipes(String userId) async {
+  final uri = Uri.parse('https://efb4-121-188-29-7.ngrok-free.app/recipes/recommend/advanced/top3?user_id=$userId');
+
+  final response = await http.get(uri);
+
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(response.body);
+    return data.map((e) => RecipeModel.fromJson(e)).toList();
+  } else {
+    throw Exception('레시피를 불러오는 데 실패했습니다.');
+  }
+}
+
 
 class _RecipePageState extends State<RecipePage> {
-  // — 필터용 드롭다운 데이터
-  final List<String> _cuisines = ['양식', '일식', '한식', '중식'];
-  String _selectedCuisine = '양식';
 
   // — 검색창 컨트롤러
   final TextEditingController _searchController = TextEditingController();
@@ -32,7 +46,7 @@ class _RecipePageState extends State<RecipePage> {
     super.initState();
     // 초기 페이지를 1로 주어, 0번에는 마지막 아이템을 복제해서 넣습니다.
     _pageController = PageController(initialPage: 1);
-    _recipesFuture = RecipeExtraction.fetchRandomRecipes(3);
+    _recipesFuture = fetchUserRecipes(widget.userId); // ← 여기에 userId 전달
   }
 
   @override

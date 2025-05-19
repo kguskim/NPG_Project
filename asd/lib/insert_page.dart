@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:yolo/home.dart';
 import 'manage.dart';
 class InsertPage extends StatefulWidget {
+  final String userId;
   final String data;
   final String imagePath;
 
-  const InsertPage({Key? key, required this.data, required this.imagePath})
+  const InsertPage({Key? key, required this.userId, required this.data, required this.imagePath})
       : super(key: key);
 
   @override
@@ -154,7 +155,7 @@ class InsertPageState extends State<InsertPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => (const HomePage())),
+              MaterialPageRoute(builder: (_) => (HomePage(userId: widget.userId))),
             );
           },
         ),

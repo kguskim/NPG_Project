@@ -52,7 +52,8 @@ class DataService {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final String userId;
+  const HomePage({Key? key, required this.userId}) : super(key: key);
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -188,7 +189,7 @@ class _HomePageState extends State<HomePage> {
                           label: '재료',
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const App()),
+                            MaterialPageRoute(builder: (_) => App(userId: widget.userId)),
                           ),
                         ),
                         _NavButton(
@@ -206,7 +207,7 @@ class _HomePageState extends State<HomePage> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const RecipePage()),
+                                builder: (_) => RecipePage(userId: widget.userId)),
                           ),
                         ),
                       ],
