@@ -238,16 +238,23 @@ class _HomePageState extends State<HomePage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: snap.data!
-                                          .map(
-                                            (p) => GestureDetector(
+                                          .asMap()
+                                          .entries
+                                          .map((entry) {
+                                        final i = entry.key;
+                                        final p = entry.value;
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            GestureDetector(
                                               onTap: () {
                                                 Navigator.push(
                                                   ctx,
                                                   MaterialPageRoute(
                                                     builder: (context) =>
                                                         NoticeBoard(
-                                                            noticeId: p
-                                                                .id), // ID는 1부터 시작
+                                                            noticeId: p.id),
                                                   ),
                                                 );
                                               },
@@ -256,17 +263,22 @@ class _HomePageState extends State<HomePage> {
                                                     const EdgeInsets.symmetric(
                                                         vertical: 4.0),
                                                 child: Text(
-                                                  '• ${p.title}',
+                                                  '${p.title}',
                                                   style: const TextStyle(
-                                                    color: Colors.blue,
+                                                    color:
+                                                        Colors.black, // 파란색 제거
                                                     decoration: TextDecoration
-                                                        .underline,
+                                                        .none, // 밑줄 제거
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                          )
-                                          .toList(),
+                                            // 마지막 항목이 아니라면 Divider 추가
+                                            if (i < snap.data!.length - 1)
+                                              const Divider(height: 1),
+                                          ],
+                                        );
+                                      }).toList(),
                                     );
                                   },
                                 ),
