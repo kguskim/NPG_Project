@@ -58,7 +58,8 @@ class _ManagePageState extends State<ManagePage> {
   String _selectedFridge = 'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L';
 
   // 컴파트먼트(구획)
-  final List<String> _compartments = ['냉장실', '냉동실', '문칸 상단', '문칸 하단'];
+  List<String> get _compartments => fridgeLayouts[_selectedFridge]?.keys.toList() ?? [];
+
   int _currentCompartment = 0;
 
   late Future<List<FridgeItem>> _itemsFuture;
@@ -70,6 +71,10 @@ class _ManagePageState extends State<ManagePage> {
   }
 
   void _loadItems() {
+    final compartments = _compartments;
+    if (_currentCompartment >= compartments.length) {
+      _currentCompartment = 0;
+    }
     setState(() {
       _itemsFuture = _fetchItemsFromServer(
         fridge: _selectedFridge,
@@ -197,8 +202,11 @@ class _ManagePageState extends State<ManagePage> {
               value: _selectedFridge,
               onChanged: (v) {
                 if (v != null) {
-                  _selectedFridge = v;
-                  _loadItems();
+                  setState(() {
+                    _selectedFridge = v;
+                    _currentCompartment = 0; // 인덱스 초기화
+                    _loadItems();
+                  });
                 }
               },
             ),

@@ -23,7 +23,8 @@ class InsertPageState extends State<InsertPage> {
       TextEditingController(text: '바나나');
   final TextEditingController memoController = TextEditingController();
 
-  final List<String> categories = ['과일', '야채', '육류'];
+  final List<String> categories = ['감자류', '견과종실류', '곡류', '과일류', '난류', '당류', '두류', '버섯류',
+    '어패류', '유제품', '유지류', '육류', '음료류','조리가공식품류','조미료류','주류','차류','채소류','해조류','기타'];
   final List<String> locations = [
     '냉장 1층',
     '냉장 2층',
