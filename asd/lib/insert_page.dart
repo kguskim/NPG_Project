@@ -168,18 +168,35 @@ class InsertPageState extends State<InsertPage> {
                   }
                 }
 
+                int area_id = 0;
+                for (int i = 0; i < locations.length; i++) {
+                  if (locations[i] == selectedLocation) {
+                    area_id = i;
+                    break;
+                  }
+                }
+
                 // 전송할 데이터 준비
                 final data = {
-                  'user_id': widget.userId,
-                  'ingredient_name': nameController.text,
-                  'quantity': int.tryParse(quantityController.text) ?? 1,
-                  'purchase_date': purchaseDate.toIso8601String(),
-                  'expiration_date': expiryDate.toIso8601String(),
-                  "alias": "string",
-                  "fridge_id": fridge_id,
-                  "area_id": selectedLocation,
+                  "user_id": widget.userId,
+                  "ingredient_name": typeController.text, // 분류한 식재료명 (예: 삼다수)
+                  "quantity": int.parse(quantityController.text),
+                  "purchase_date": purchaseDate.year.toString() +
+                      "-" +
+                      purchaseDate.month.toString() +
+                      "-" +
+                      purchaseDate.day.toString(),
+                  "expiration_date": expiryDate.year.toString() +
+                      "-" +
+                      expiryDate.month.toString() +
+                      "-" +
+                      expiryDate.day.toString(),
+                  "alias": nameController.text, // 식재료명 (예: 생수, 바나나)
+                  "area_id": area_id,
                   "image": widget.imagePath,
-                  "note": memoController.text
+                  "note": memoController.text,
+                  "fridge_id": fridge_id,
+                  "ingredient_id": 0
                 };
 
                 // POST 요청 전송
