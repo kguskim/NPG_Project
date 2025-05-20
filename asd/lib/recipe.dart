@@ -103,15 +103,6 @@ class _RecipePageState extends State<RecipePage> {
                   // ─── 필터 (드롭다운 + 검색)
                   Row(
                     children: [
-                      DropdownButton<String>(
-                        value: _selectedCuisine,
-                        items: _cuisines
-                            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                            .toList(),
-                        onChanged: (v) {
-                          if (v != null) setState(() => _selectedCuisine = v);
-                        },
-                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
