@@ -150,7 +150,7 @@ class _HomePageState extends State<HomePage> {
                 child: NoticeBoard(),
               ),
 
-              // 오늘의 메뉴 더미데티어
+              // 오늘의 메뉴 더미데이터
               Builder(
                 builder: (context) {
                   final today = DateTime.now();
