@@ -12,7 +12,8 @@ import 'recipe.dart'; // RecipePage
 import 'manage.dart'; // ManagePage
 import 'login_page.dart'; // LoginPage
 import 'widgets/to_buy_section.dart';
-
+import 'models/today_recipe_model.dart';
+import 'today_detailed_recipe.dart';
 /// 공지사항 모델
 class Post {
   final int id;
