@@ -104,6 +104,7 @@ class _RecipePageState extends State<RecipePage> {
       body: SafeArea(
         child: Column(
           children: [
+            // ─── 상단 바 ────────────────────
             Row(
               children: [
                 IconButton(
