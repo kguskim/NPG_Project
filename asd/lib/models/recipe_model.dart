@@ -11,7 +11,7 @@ class RecipeModel {
   final String title;
 
   /// 재료 목록
-  final List<String> ingredients;
+  final String ingredients;
 
   /// 단계별 이미지 URL 리스트
   final List<String> stepImages;
@@ -34,7 +34,7 @@ class RecipeModel {
       id: json['id'],
       imageUrl: json['imageUrl'],
       title: json['title'],
-      ingredients: List<String>.from(json['ingredients']),
+      ingredients: json['ingredients'],
       stepImages:   List<String>.from(json['stepImages']),
       stepDetails:  List<String>.from(json['stepDetails']),
     );

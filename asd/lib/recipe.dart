@@ -21,7 +21,7 @@ Future<List<RecipeModel>> fetchUserRecipes(String userId) async {
   final response = await http.get(uri);
 
   if (response.statusCode == 200) {
-    final List data = jsonDecode(response.body);
+    final List data = jsonDecode(utf8.decode(response.bodyBytes));
     return data.map((e) => RecipeModel.fromJson(e)).toList();
   } else {
     throw Exception('레시피를 불러오는 데 실패했습니다.');
@@ -249,13 +249,9 @@ class _RecipePageState extends State<RecipePage> {
                         border: Border.all(color: Colors.grey.shade300),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: ListView.separated(
-                        itemCount: recipes[_currentIndex].ingredients.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 4),
-                        itemBuilder: (ctx, i) => Text(
-                          '• ${recipes[_currentIndex].ingredients[i]}',
-                          style: const TextStyle(fontSize: 14),
-                        ),
+                      child: Text(
+                        recipes[_currentIndex].ingredients,
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                   ),

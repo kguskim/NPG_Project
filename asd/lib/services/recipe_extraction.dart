@@ -29,7 +29,7 @@ class RecipeExtraction {
         id: 'dummy1',
         imageUrl: 'https://via.placeholder.com/200?text=Dummy+1',
         title: '더미 레시피 1',
-        ingredients: ['재료 A', '재료 B'],
+        ingredients: '재료 A, 재료 B',
         stepImages: [
           'https://via.placeholder.com/400x200?text=Step+1',
           'https://via.placeholder.com/400x200?text=Step+2',
@@ -46,7 +46,7 @@ class RecipeExtraction {
         id: 'dummy2',
         imageUrl: 'https://via.placeholder.com/200?text=Dummy+2',
         title: '더미 레시피 2',
-        ingredients: ['재료 C', '재료 D'],
+        ingredients: '재료 C, 재료 D',
         stepImages: [
           'https://via.placeholder.com/400x200?text=C-Step+1',
           'https://via.placeholder.com/400x200?text=C-Step+2',
@@ -61,7 +61,7 @@ class RecipeExtraction {
         id: 'dummy3',
         imageUrl: 'https://via.placeholder.com/200?text=Dummy+3',
         title: '더미 레시피 3',
-        ingredients: ['재료 E', '재료 F'],
+        ingredients: '재료 E, 재료 F',
         stepImages: [
           'https://via.placeholder.com/400x200?text=E-Step+1',
         ],
