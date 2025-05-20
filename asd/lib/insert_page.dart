@@ -4,12 +4,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:yolo/home.dart';
 import 'manage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 class InsertPage extends StatefulWidget {
   final String userId;
   final String data;
   final String imagePath;
 
-  const InsertPage({Key? key, required this.userId, required this.data, required this.imagePath})
+  const InsertPage(
+      {Key? key,
+      required this.userId,
+      required this.data,
+      required this.imagePath})
       : super(key: key);
 
   @override
@@ -25,8 +32,28 @@ class InsertPageState extends State<InsertPage> {
       TextEditingController(text: '바나나');
   final TextEditingController memoController = TextEditingController();
 
-  final List<String> categories = ['감자류', '견과종실류', '곡류', '과일류', '난류', '당류', '두류', '버섯류',
-    '어패류', '유제품', '유지류', '육류', '음료류','조리가공식품류','조미료류','주류','차류','채소류','해조류','기타'];
+  final List<String> categories = [
+    '감자류',
+    '견과종실류',
+    '곡류',
+    '과일류',
+    '난류',
+    '당류',
+    '두류',
+    '버섯류',
+    '어패류',
+    '유제품',
+    '유지류',
+    '육류',
+    '음료류',
+    '조리가공식품류',
+    '조미료류',
+    '주류',
+    '차류',
+    '채소류',
+    '해조류',
+    '기타'
+  ];
   late String selectedFridgeFromManage;
   late String selectedLocation;
   List<String> get locations =>
@@ -36,15 +63,17 @@ class InsertPageState extends State<InsertPage> {
     super.initState();
     _loadLastFridge();
   }
+
   Future<void> _loadLastFridge() async {
     final prefs = await SharedPreferences.getInstance();
-    final fridgeName = prefs.getString('last_selected_fridge') ??
-        fridgeLayouts.keys.first;
+    final fridgeName =
+        prefs.getString('last_selected_fridge') ?? fridgeLayouts.keys.first;
     setState(() {
       selectedFridgeFromManage = fridgeName;
       selectedLocation = locations.first;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     String selectedCategory = categories[0];
@@ -129,10 +158,48 @@ class InsertPageState extends State<InsertPage> {
             ),
             const SizedBox(height: 20),
 
-            // 저장 버튼
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
+              onPressed: () async {
+                int fridge_id = 0;
+                for (int i = 0; i < fridges.length; i++) {
+                  if (fridges[i] == selectedFridgeFromManage) {
+                    fridge_id = i;
+                    break;
+                  }
+                }
+
+                // 전송할 데이터 준비
+                final data = {
+                  'user_id': "string",
+                  'ingredient_name': nameController.toString(),
+                  'quantity': 1,
+                  'purchase_date': "2025-05-20",
+                  'expiration_date': "2025-05-20",
+                  "alias": "string",
+                  "area_id": fridge_id,
+                  "image": "string",
+                  "note": selectedLocation
+                };
+
+                // POST 요청 전송
+                final uri = Uri.parse(
+                    'https://efb4-121-188-29-7.ngrok-free.app/ingredients');
+                final response = await http.post(
+                  uri,
+                  headers: {'Content-Type': 'application/json'},
+                  body: json.encode(data),
+                );
+
+                // 응답 처리
+                if (response.statusCode == 200) {
+                  // 성공 시 이전 화면으로 이동
+                  Navigator.pop(context);
+                } else {
+                  // 실패 시 알림
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('등록 실패: ${response.statusCode}')),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.lightBlueAccent,
@@ -140,8 +207,8 @@ class InsertPageState extends State<InsertPage> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 14),
                 child: Text('등록', style: TextStyle(fontSize: 16)),
               ),
             ),
@@ -155,7 +222,8 @@ class InsertPageState extends State<InsertPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => (HomePage(userId: widget.userId))),
+              MaterialPageRoute(
+                  builder: (_) => (HomePage(userId: widget.userId))),
             );
           },
         ),

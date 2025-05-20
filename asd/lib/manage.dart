@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 void _saveFridgeName(String fridgeName) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('last_selected_fridge', fridgeName);
 }
+
 /// 칸막이 설정 클래스
 class GridConfig {
   final int rows;
@@ -17,21 +17,27 @@ class GridConfig {
   const GridConfig(this.rows, this.cols);
 }
 
+final List<String> fridges = [
+  'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L',
+  'LG 모던엣지 냉장고 462L',
+  '친구 냉장고'
+];
+
 /// 냉장고 종류 & 구획별 행×열 설정
 const Map<String, Map<String, GridConfig>> fridgeLayouts = {
   'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L': {
-    '냉장실':    GridConfig(5, 1),
-    '냉동실':    GridConfig(3, 1),
+    '냉장실': GridConfig(5, 1),
+    '냉동실': GridConfig(3, 1),
     '냉장실 문칸': GridConfig(3, 1)
   },
   'LG 모던엣지 냉장고 462L': {
-    '냉장실':    GridConfig(5, 1),
-    '냉동실':    GridConfig(3, 1),
+    '냉장실': GridConfig(5, 1),
+    '냉동실': GridConfig(3, 1),
     '냉장실 문칸': GridConfig(4, 2)
   },
   '신규 냉장고': {
-    '냉장실':    GridConfig(2, 2),
-    '냉동실':    GridConfig(2, 1),
+    '냉장실': GridConfig(2, 2),
+    '냉동실': GridConfig(2, 1),
     '문칸 상단': GridConfig(1, 2),
     '문칸 하단': GridConfig(1, 2),
   },
@@ -60,11 +66,16 @@ class ManagePage extends StatefulWidget {
 class _ManagePageState extends State<ManagePage> {
   final TextEditingController _searchController = TextEditingController();
   // 냉장고 종류 드롭다운
-  final List<String> _fridges = ['SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L', 'LG 모던엣지 냉장고 462L', '친구 냉장고'];
+  final List<String> _fridges = [
+    'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L',
+    'LG 모던엣지 냉장고 462L',
+    '친구 냉장고'
+  ];
   String _selectedFridge = 'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L';
 
   // 컴파트먼트(구획)
-  List<String> get _compartments => fridgeLayouts[_selectedFridge]?.keys.toList() ?? [];
+  List<String> get _compartments =>
+      fridgeLayouts[_selectedFridge]?.keys.toList() ?? [];
 
   int _currentCompartment = 0;
 
@@ -94,8 +105,7 @@ class _ManagePageState extends State<ManagePage> {
     required String compartment,
   }) async {
     final uri = Uri.parse(
-        'https://example.com/api/fridge?name=$fridge&section=$compartment'
-    );
+        'https://example.com/api/fridge?name=$fridge&section=$compartment');
     final response = await http.get(uri);
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
@@ -115,26 +125,26 @@ class _ManagePageState extends State<ManagePage> {
   /// GridView 기반 칸막이 + 아이템 매핑
   /// GridView + LayoutBuilder 기반 칸막이 + 아이템 매핑
   Widget _buildPartitionWithItems(List<FridgeItem> items) {
-    final section     = _compartments[_currentCompartment];
-    final config      = fridgeLayouts[_selectedFridge]![section]!;
-    const spacing     = 12.0;  // 셀 간격
-    const borderWidth = 3.0;   // 셀 경계선 두께
+    final section = _compartments[_currentCompartment];
+    final config = fridgeLayouts[_selectedFridge]![section]!;
+    const spacing = 12.0; // 셀 간격
+    const borderWidth = 3.0; // 셀 경계선 두께
 
     return LayoutBuilder(
       builder: (context, constraints) {
         // 전체 그리드 높이에서 스페이싱과 테두리 모두 뺀 뒤, 행 수로 나눠서 셀 높이 계산
-        final totalH    = constraints.maxHeight;
-        final rows      = config.rows;
-        final cellH     = (totalH - (rows - 1) * spacing - 2 * borderWidth) / rows;
+        final totalH = constraints.maxHeight;
+        final rows = config.rows;
+        final cellH = (totalH - (rows - 1) * spacing - 2 * borderWidth) / rows;
 
         return GridView.builder(
           // 스크롤은 막아서 고정된 높이 안에서 모두 보이게
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount:    config.cols,      // 열 수
-            crossAxisSpacing:  spacing,          // 열 간격
-            mainAxisSpacing:   spacing,          // 행 간격
-            mainAxisExtent:    cellH,            // 셀 높이를 직접 지정
+            crossAxisCount: config.cols, // 열 수
+            crossAxisSpacing: spacing, // 열 간격
+            mainAxisSpacing: spacing, // 행 간격
+            mainAxisExtent: cellH, // 셀 높이를 직접 지정
           ),
           itemCount: config.rows * config.cols,
           itemBuilder: (context, idx) {
@@ -162,7 +172,8 @@ class _ManagePageState extends State<ManagePage> {
                       child: const CircleAvatar(
                         radius: 12,
                         backgroundColor: Colors.black45,
-                        child: Icon(Icons.delete, size: 16, color: Colors.white),
+                        child:
+                            Icon(Icons.delete, size: 16, color: Colors.white),
                       ),
                     ),
                   ),
@@ -176,7 +187,8 @@ class _ManagePageState extends State<ManagePage> {
             return Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border.all(color: Colors.grey.shade400, width: borderWidth),
+                border:
+                    Border.all(color: Colors.grey.shade400, width: borderWidth),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: cellContent,
@@ -204,7 +216,9 @@ class _ManagePageState extends State<ManagePage> {
                 labelText: '냉장고 종류',
                 border: OutlineInputBorder(),
               ),
-              items: _fridges.map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
+              items: _fridges
+                  .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                  .toList(),
               value: _selectedFridge,
               onChanged: (v) {
                 if (v != null) {
@@ -222,25 +236,30 @@ class _ManagePageState extends State<ManagePage> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
-                  onPressed: _currentCompartment > 0 ? () {
-                    _currentCompartment--;
-                    _loadItems();
-                  } : null,
+                  onPressed: _currentCompartment > 0
+                      ? () {
+                          _currentCompartment--;
+                          _loadItems();
+                        }
+                      : null,
                 ),
                 Expanded(
                   child: Center(
                     child: Text(
                       _compartments[_currentCompartment],
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
-                  onPressed: _currentCompartment < _compartments.length - 1 ? () {
-                    _currentCompartment++;
-                    _loadItems();
-                  } : null,
+                  onPressed: _currentCompartment < _compartments.length - 1
+                      ? () {
+                          _currentCompartment++;
+                          _loadItems();
+                        }
+                      : null,
                 ),
               ],
             ),
