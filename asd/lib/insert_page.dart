@@ -171,14 +171,15 @@ class InsertPageState extends State<InsertPage> {
                 // 전송할 데이터 준비
                 final data = {
                   'user_id': widget.userId,
-                  'ingredient_name': nameController.toString(),
-                  'quantity': int.parse(quantityController.toString()),
-                  'purchase_date': purchaseDate.toString(),
-                  'expiration_date': expiryDate.toString(),
+                  'ingredient_name': nameController.text,
+                  'quantity': int.tryParse(quantityController.text) ?? 1,
+                  'purchase_date': purchaseDate.toIso8601String(),
+                  'expiration_date': expiryDate.toIso8601String(),
                   "alias": "string",
+                  "fridge_id": fridge_id,
                   "area_id": selectedLocation,
                   "image": widget.imagePath,
-                  "note": "string"
+                  "note": memoController.text
                 };
 
                 // POST 요청 전송

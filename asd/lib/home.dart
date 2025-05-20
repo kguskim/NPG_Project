@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadToBuy(); // ← 여기에 로컬에 저장된 리스트를 불러옵니다.
-    _postsFuture = DataService.fetchLatestPosts(0);
+    _postsFuture = DataService.fetchLatestPosts(4);
     _menuFuture = DataService.getTodayMenu();
   }
 
