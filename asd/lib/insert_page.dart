@@ -26,12 +26,6 @@ class InsertPage extends StatefulWidget {
 class InsertPageState extends State<InsertPage> {
   static String txt = '';
 
-  final TextEditingController quantityController =
-      TextEditingController(text: '1');
-  final TextEditingController typeController =
-      TextEditingController(text: '바나나');
-  final TextEditingController memoController = TextEditingController();
-
   final List<String> categories = [
     '감자류',
     '견과종실류',
@@ -83,6 +77,11 @@ class InsertPageState extends State<InsertPage> {
 
     final TextEditingController nameController =
         TextEditingController(text: '${widget.data}');
+    final TextEditingController quantityController =
+        TextEditingController(text: '1');
+    final TextEditingController typeController =
+        TextEditingController(text: '바나나');
+    final TextEditingController memoController = TextEditingController();
 
     return Scaffold(
       appBar: AppBar(
@@ -183,21 +182,24 @@ class InsertPageState extends State<InsertPage> {
                   "quantity": int.parse(quantityController.text),
                   "purchase_date": purchaseDate.year.toString() +
                       "-" +
-                      purchaseDate.month.toString() +
+                      purchaseDate.month.toString().padLeft(2, '0') +
                       "-" +
-                      purchaseDate.day.toString(),
+                      purchaseDate.day.toString().padLeft(2, '0'),
                   "expiration_date": expiryDate.year.toString() +
                       "-" +
-                      expiryDate.month.toString() +
+                      expiryDate.month.toString().padLeft(2, '0') +
                       "-" +
-                      expiryDate.day.toString(),
+                      expiryDate.day.toString().padLeft(2, '0'),
                   "alias": nameController.text, // 식재료명 (예: 생수, 바나나)
-                  "area_id": area_id,
+                  "area_id": area_id + 1,
                   "image": widget.imagePath,
                   "note": memoController.text,
                   "fridge_id": fridge_id,
-                  "ingredient_id": 0
                 };
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${data}')),
+                );
 
                 // POST 요청 전송
                 final uri = Uri.parse(
