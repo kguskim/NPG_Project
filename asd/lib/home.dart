@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadToBuy(); // ← 여기에 로컬에 저장된 리스트를 불러옵니다.
-    _postsFuture = DataService.fetchLatestPosts(4);
+    _postsFuture = DataService.fetchLatestPosts(0);
     _menuFuture = DataService.getTodayMenu();
   }
 
@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final expiredNotice = '바나나 소비기한 임박 2025-05-21';
+    final expiredNotice = '소비기한이 3일 남은 식재료';
     final formattedDate =
         DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
 
@@ -189,7 +189,8 @@ class _HomePageState extends State<HomePage> {
                           label: '재료',
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => App(userId: widget.userId)),
+                            MaterialPageRoute(
+                                builder: (_) => App(userId: widget.userId)),
                           ),
                         ),
                         _NavButton(
@@ -207,7 +208,8 @@ class _HomePageState extends State<HomePage> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => RecipePage(userId: widget.userId)),
+                                builder: (_) =>
+                                    RecipePage(userId: widget.userId)),
                           ),
                         ),
                       ],

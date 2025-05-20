@@ -60,11 +60,11 @@ class _NoticeBoardState extends State<NoticeBoard> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://efb4-121-188-29-7.ngrok-free.app/notices$id'),
+        Uri.parse('https://efb4-121-188-29-7.ngrok-free.app/notices/$id'),
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
           notice = data;
           isLoading = false;
