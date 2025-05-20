@@ -21,10 +21,11 @@ class GridConfig {
   const GridConfig(this.rows, this.cols);
 }
 
+/// 냉장고 종류 목록
 final List<String> fridges = [
   'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L',
   'LG 모던엣지 냉장고 462L',
-  '신규 냉장고'
+  '신규 냉장고',
 ];
 
 /// 냉장고 종류 & 구획별 행×열 설정
@@ -32,12 +33,12 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
   'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L': {
     '냉장실': GridConfig(5, 1),
     '냉동실': GridConfig(3, 1),
-    '냉장실 문칸': GridConfig(3, 1)
+    '냉장실 문칸': GridConfig(3, 1),
   },
   'LG 모던엣지 냉장고 462L': {
     '냉장실': GridConfig(5, 1),
     '냉동실': GridConfig(3, 1),
-    '냉장실 문칸': GridConfig(4, 2)
+    '냉장실 문칸': GridConfig(4, 2),
   },
   '신규 냉장고': {
     '냉장실': GridConfig(2, 2),
@@ -71,22 +72,20 @@ class ManagePage extends StatefulWidget {
 }
 
 class _ManagePageState extends State<ManagePage> {
-  final TextEditingController _searchController = TextEditingController();
-
   // 드롭다운 목록
-  
-  final List<String> _fridges = fridges;
+  late final List<String> _fridges = fridges;
 
-  // 현재 선택된 냉장고 (기본값은 리스트 첫 번째)
+  // 현재 선택된 냉장고 (SharedPreferences에서 복원)
   String _selectedFridge = fridges.first;
 
-  // 현재 compartment 인덱스
+  // compartment 인덱스
   int _currentCompartment = 0;
 
   // compartment 목록
   List<String> get _compartments =>
       fridgeLayouts[_selectedFridge]?.keys.toList() ?? [];
 
+  // 서버에서 받아올 Future
   late Future<List<FridgeItem>> _itemsFuture;
 
   @override
@@ -95,22 +94,20 @@ class _ManagePageState extends State<ManagePage> {
     _initSelectedFridge();
   }
 
-  /// SharedPreferences에서 마지막 선택된 냉장고를 로드하고,
-  /// _selectedFridge에 설정한 뒤 _loadItems() 호출
+  /// 마지막 선택값을 SharedPreferences에서 복원하고 아이템 로드
   Future<void> _initSelectedFridge() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_kLastSelectedFridgeKey);
     if (saved != null && _fridges.contains(saved)) {
       _selectedFridge = saved;
     }
-    // compartment 인덱스가 범위를 벗어나지 않도록 조정
     if (_currentCompartment >= _compartments.length) {
       _currentCompartment = 0;
     }
     _loadItems();
   }
 
-  /// 현재 _selectedFridge와 _currentCompartment를 기반으로 서버에서 아이템 로드
+  /// 현재 선택된 냉장고와 compartment로 아이템 로드
   void _loadItems() {
     final section = _compartments.isNotEmpty
         ? _compartments[_currentCompartment]
@@ -158,9 +155,7 @@ class _ManagePageState extends State<ManagePage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalH = constraints.maxHeight;
-        final cellH = (totalH -
-            (config.rows - 1) * spacing -
-            2 * borderWidth) /
+        final cellH = (totalH - (config.rows - 1) * spacing - 2 * borderWidth) /
             config.rows;
 
         return GridView.builder(
@@ -194,8 +189,8 @@ class _ManagePageState extends State<ManagePage> {
                       child: const CircleAvatar(
                         radius: 12,
                         backgroundColor: Colors.black45,
-                        child:
-                        Icon(Icons.delete, size: 16, color: Colors.white),
+                        child: Icon(Icons.delete,
+                            size: 16, color: Colors.white),
                       ),
                     ),
                   ),
@@ -205,11 +200,10 @@ class _ManagePageState extends State<ManagePage> {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border:
-                  Border.all(color: Colors.grey.shade400, width: borderWidth),
+                  border: Border.all(
+                      color: Colors.grey.shade400, width: borderWidth),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const SizedBox.shrink(),
               );
             }
           },
@@ -240,14 +234,13 @@ class _ManagePageState extends State<ManagePage> {
                   .toList(),
               value: _selectedFridge,
               onChanged: (v) {
-                if (v != null) {
-                  setState(() {
-                    _selectedFridge = v;
-                    _currentCompartment = 0;
-                    _saveFridgeName(v);
-                  });
-                  _loadItems();
-                }
+                if (v == null) return;
+                setState(() {
+                  _selectedFridge = v;
+                  _currentCompartment = 0;
+                });
+                _saveFridgeName(v);
+                _loadItems();
               },
             ),
             const SizedBox(height: 16),
@@ -293,15 +286,18 @@ class _ManagePageState extends State<ManagePage> {
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
-                  border: Border.all(color: Colors.grey.shade400, width: 2),
+                  border:
+                  Border.all(color: Colors.grey.shade400, width: 2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(8),
                 child: FutureBuilder<List<FridgeItem>>(
                   future: _itemsFuture,
                   builder: (context, snap) {
-                    if (snap.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                    if (snap.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(
+                          child: CircularProgressIndicator());
                     }
                     final items = snap.data ?? [];
                     return _buildPartitionWithItems(items);
