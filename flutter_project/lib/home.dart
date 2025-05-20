@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
 import 'manage.dart';
-import 'notice.dart'; // 공지사항 ui 위젯 불러옵니다
+import 'notice.dart'; 
 // import 'today_recipe.dart'; 서버 연동 후 사용
 // import 'models/recipe.dart'; 서버 연동 후 사용
 
