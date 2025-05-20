@@ -170,7 +170,7 @@ class InsertPageState extends State<InsertPage> {
 
                 // 전송할 데이터 준비
                 final data = {
-                  'user_id': "string",
+                  'user_id': widget.userId,
                   'ingredient_name': nameController.toString(),
                   'quantity': int.parse(quantityController.toString()),
                   'purchase_date': purchaseDate.toString(),
