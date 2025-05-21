@@ -175,6 +175,8 @@ class InsertPageState extends State<InsertPage> {
                   }
                 }
 
+                String? imageUrl = await uploadImage(File(widget.imagePath));
+
                 // 전송할 데이터 준비
                 final data = {
                   "user_id": widget.userId,
@@ -192,7 +194,7 @@ class InsertPageState extends State<InsertPage> {
                       expiryDate.day.toString().padLeft(2, '0'),
                   "alias": nameController.text, // 식재료명 (예: 생수, 바나나)
                   "area_id": area_id + 1,
-                  "image": uploadImage(File(widget.imagePath)).toString(),
+                  "image": imageUrl,
                   "note": memoController.text,
                   "fridge_id": fridge_id,
                 };
