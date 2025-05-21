@@ -50,21 +50,44 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
   },
 };
 
+// 예시: 서버에서 내려주는 ID와 UI에서 쓰는 이름을 매핑
+const Map<int, String> fridgeIdToName = {
+  1: 'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L',
+  2: 'LG 모던엣지 냉장고 462L',
+  3: '신규 냉장고',
+};
+
+const Map<int, String> areaIdToName = {
+  1: '냉장실',
+  2: '냉동실',
+  3: '냉장실 문칸',
+  4: '문칸 상단',
+  5: '문칸 하단',
+};
+
 /// 냉장고 안의 식재료나 물건 하나를 표현하는 모델 클래스입니다.
 /// 주로 서버에서 받은 JSON 데이터를 다루기 위해 사용
 class FridgeItem {
   final String id;
   final String imageUrl;
   final int ingredient_id;
+  final int fridge_id;
+  final int area_id;
 
   FridgeItem(
-      {required this.id, required this.imageUrl, required this.ingredient_id});
+      {required this.id,
+      required this.imageUrl,
+      required this.ingredient_id,
+      required this.fridge_id,
+      required this.area_id});
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
     return FridgeItem(
         id: json['user_id'].toString(),
         imageUrl: json['image'],
-        ingredient_id: json['ingredient_id']);
+        ingredient_id: json['ingredient_id'],
+        fridge_id: json['fridge_id'],
+        area_id: json['area_id']);
   }
 }
 
@@ -184,6 +207,21 @@ class _ManagePageState extends State<ManagePage> {
     const spacing = 12.0;
     const borderWidth = 3.0;
 
+    // ✅ 필터링: 현재 냉장고 ID 및 구역 ID에 해당하는 식재료만 포함
+    final filteredItems = items.where((item) {
+      return fridgeIdToName[item.fridge_id] == _selectedFridge &&
+          areaIdToName[item.fridge_id] == section;
+    }).toList();
+
+    // ✅ 3개씩 묶기
+    final groupedItems = <List<FridgeItem>>[];
+    for (int i = 0; i < filteredItems.length; i += 3) {
+      groupedItems.add(filteredItems.sublist(
+        i,
+        i + 3 > filteredItems.length ? filteredItems.length : i + 3,
+      ));
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalH = constraints.maxHeight;
@@ -200,35 +238,65 @@ class _ManagePageState extends State<ManagePage> {
           ),
           itemCount: config.rows * config.cols,
           itemBuilder: (context, idx) {
-            if (idx < items.length) {
-              final item = items[idx];
-              return Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: _buildImage(item.imageUrl),
+            if (idx < groupedItems.length) {
+              final group = groupedItems[idx];
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                    color: Colors.grey.shade400,
+                    width: borderWidth,
                   ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: GestureDetector(
-                      onTap: () => _deleteItem(item.ingredient_id.toString()),
-                      child: const CircleAvatar(
-                        radius: 12,
-                        backgroundColor: Colors.black45,
-                        child:
-                            Icon(Icons.delete, size: 16, color: Colors.white),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.all(6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: group.map((item) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6.0),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: SizedBox(
+                              width: 50,
+                              height: 50,
+                              child: Stack(
+                                children: [
+                                  _buildImage(item.imageUrl),
+                                  Positioned(
+                                    top: 2,
+                                    right: 2,
+                                    child: GestureDetector(
+                                      onTap: () => _deleteItem(
+                                          item.ingredient_id.toString()),
+                                      child: const CircleAvatar(
+                                        radius: 8,
+                                        backgroundColor: Colors.black45,
+                                        child: Icon(Icons.delete,
+                                            size: 12, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ],
+                    );
+                  }).toList(),
+                ),
               );
             } else {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(
-                      color: Colors.grey.shade400, width: borderWidth),
+                    color: Colors.grey.shade400,
+                    width: borderWidth,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
               );
