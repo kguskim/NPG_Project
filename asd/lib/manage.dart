@@ -54,14 +54,28 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
 
 /// 냉장고 안의 식재료나 물건 하나를 표현하는 모델 클래스입니다.
 class FridgeItem {
-  final String id;
-  final String imageUrl;
   final int ingredient_id;
+  final String imageUrl;
+  final String name;
+  final String alias;
+  final int quantity;
+  final String category;
+  final DateTime boughtAt;
+  final DateTime expiresAt;
+  final String areaId;
+  final String memo;
 
   FridgeItem({
-    required this.id,
     required this.imageUrl,
     required this.ingredient_id,
+    required this.name,
+    required this.alias,
+    required this.quantity,
+    required this.category,
+    required this.boughtAt,
+    required this.expiresAt,
+    required this.areaId,
+    required this.memo,
   });
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
