@@ -1,9 +1,11 @@
-// lib/manage_page.dart
+// lib/manage.dart
+
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import 'package:yolo/login_page.dart';
 
 /// SharedPreferences에 저장된 마지막 선택된 냉장고 이름 키
@@ -51,7 +53,6 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
 };
 
 /// 냉장고 안의 식재료나 물건 하나를 표현하는 모델 클래스입니다.
-/// 주로 서버에서 받은 JSON 데이터를 다루기 위해 사용
 class FridgeItem {
   final String id;
   final String imageUrl;
@@ -70,12 +71,23 @@ class FridgeItem {
       ingredient_id: json['ingredient_id'],
     );
   }
+
+  FridgeItem copyWith({
+    String? id,
+    String? imageUrl,
+    int? ingredient_id,
+  }) {
+    return FridgeItem(
+      id: id ?? this.id,
+      imageUrl: imageUrl ?? this.imageUrl,
+      ingredient_id: ingredient_id ?? this.ingredient_id,
+    );
+  }
 }
 
 /// 냉장고 관리 페이지
 class ManagePage extends StatefulWidget {
   final String userId;
-
   const ManagePage({super.key, required this.userId});
 
   @override
@@ -84,30 +96,19 @@ class ManagePage extends StatefulWidget {
 
 /// 냉장고 관리 STATE
 class _ManagePageState extends State<ManagePage> {
-  // 드롭다운 목록
   late final List<String> _fridges = fridges;
-
-  // 현재 선택된 냉장고 (SharedPreferences에서 복원)
   String _selectedFridge = fridges.first;
-
-  // compartment 인덱스
   int _currentCompartment = 0;
-
-  // compartment 목록
   List<String> get _compartments =>
       fridgeLayouts[_selectedFridge]?.keys.toList() ?? [];
-
-  // 서버에서 받아올 Future
   late Future<List<FridgeItem>> _itemsFuture;
 
-  // 상태 초기화
   @override
   void initState() {
     super.initState();
     _initSelectedFridge();
   }
 
-  /// 마지막 선택값을 SharedPreferences에서 복원하고 아이템 로드
   Future<void> _initSelectedFridge() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_kLastSelectedFridgeKey);
@@ -120,7 +121,6 @@ class _ManagePageState extends State<ManagePage> {
     _loadItems();
   }
 
-  /// 현재 선택된 냉장고와 compartment로 아이템 로드
   void _loadItems() {
     final section =
         _compartments.isNotEmpty ? _compartments[_currentCompartment] : '';
@@ -136,7 +136,8 @@ class _ManagePageState extends State<ManagePage> {
     required String compartment,
   }) async {
     final uri = Uri.parse(
-        'https://baa8-121-188-29-7.ngrok-free.app/ingredients?user_id=${widget.userId}');
+      'https://baa8-121-188-29-7.ngrok-free.app/ingredients?user_id=${widget.userId}',
+    );
     final response = await http.get(uri);
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
@@ -145,11 +146,10 @@ class _ManagePageState extends State<ManagePage> {
     return [];
   }
 
-  /// 아이템 삭제
   Future<void> _deleteItem(String id) async {
-    showSnackBar(context, new Text(id));
-    final uri =
-        Uri.parse('https://baa8-121-188-29-7.ngrok-free.app/ingredients/$id');
+    final uri = Uri.parse(
+      'https://baa8-121-188-29-7.ngrok-free.app/ingredients/$id',
+    );
     final response = await http.delete(uri);
     if (response.statusCode == 200) {
       _loadItems();
@@ -173,16 +173,14 @@ class _ManagePageState extends State<ManagePage> {
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
-        // 파일이 없거나 접근 불가할 때 placeholder
         errorBuilder: (ctx, err, st) => const Icon(Icons.broken_image),
       );
     }
   }
 
   Widget _buildPartitionWithItems(List<FridgeItem> items) {
-    final section =
-        _compartments.isNotEmpty ? _compartments[_currentCompartment] : '';
-    final config = fridgeLayouts[_selectedFridge]?[section];
+    final config =
+        fridgeLayouts[_selectedFridge]?[_compartments[_currentCompartment]];
     if (config == null) return const SizedBox.shrink();
 
     const spacing = 12.0;
@@ -206,31 +204,36 @@ class _ManagePageState extends State<ManagePage> {
           itemBuilder: (context, idx) {
             if (idx < items.length) {
               final item = items[idx];
-              return Stack(children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: _buildImage(item.imageUrl),
-                ),
-                Positioned(
-                    top: 4,
-                    right: 4,
-                    child: GestureDetector(
+              return GestureDetector(
+                onTap: () => _showItemDetailDialog(item),
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: _buildImage(item.imageUrl),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
                         onTap: () => _deleteItem(item.ingredient_id.toString()),
                         child: const CircleAvatar(
                           radius: 12,
                           backgroundColor: Colors.black45,
                           child:
                               Icon(Icons.delete, size: 16, color: Colors.white),
-                        )))
-              ]);
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             } else {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(
-                    color: Colors.grey.shade400,
-                    width: borderWidth,
-                  ),
+                      color: Colors.grey.shade400, width: borderWidth),
                   borderRadius: BorderRadius.circular(8),
                 ),
               );
@@ -335,5 +338,100 @@ class _ManagePageState extends State<ManagePage> {
         ),
       ),
     );
+  }
+
+  /// 선택된 식재료 정보 수정/삭제 다이얼로그
+  void _showItemDetailDialog(FridgeItem item) {
+    final aliasCtrl =
+        TextEditingController(text: item.ingredient_id.toString());
+    final nameCtrl = TextEditingController(text: item.id);
+    final qtyCtrl = TextEditingController(text: '1');
+    final categoryCtrl = TextEditingController(text: '');
+    final boughtCtrl = TextEditingController(
+        text: DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    final expireCtrl = TextEditingController(
+        text: DateFormat('yyyy-MM-dd')
+            .format(DateTime.now().add(Duration(days: 7))));
+    final memoCtrl = TextEditingController(text: '');
+    final areaCtrl = TextEditingController(text: '');
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('식재료 정보 수정'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: _buildImage(item.imageUrl),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                  controller: aliasCtrl,
+                  decoration: const InputDecoration(labelText: 'Alias')),
+              TextFormField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: '식재료 명')),
+              TextFormField(
+                  controller: qtyCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: '수량')),
+              TextFormField(
+                  controller: categoryCtrl,
+                  decoration: const InputDecoration(labelText: '카테고리')),
+              TextFormField(
+                  controller: boughtCtrl,
+                  decoration:
+                      const InputDecoration(labelText: '구매일자 (YYYY-MM-DD)')),
+              TextFormField(
+                  controller: expireCtrl,
+                  decoration:
+                      const InputDecoration(labelText: '소비기한 (YYYY-MM-DD)')),
+              TextFormField(
+                  controller: memoCtrl,
+                  decoration: const InputDecoration(labelText: '메모'),
+                  maxLines: 2),
+              TextFormField(
+                  controller: areaCtrl,
+                  decoration: const InputDecoration(labelText: 'Area ID')),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _deleteItem(item.ingredient_id.toString());
+              Navigator.of(context).pop();
+            },
+            child: const Text('삭제', style: TextStyle(color: Colors.red)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // TODO: 서버에 업데이트 API 호출 (_updateItemOnServer)
+              Navigator.of(context).pop();
+              _loadItems();
+            },
+            child: const Text('수정'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 서버에 PATCH 요청으로 아이템 정보 업데이트
+  Future<void> _updateItemOnServer(
+      FridgeItem item, Map<String, dynamic> data) async {
+    final uri =
+        Uri.parse('https://your.api.com/ingredients/${item.ingredient_id}');
+    final res = await http.patch(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    if (res.statusCode != 200) {
+      throw Exception('수정 실패: ${res.statusCode}');
+    }
   }
 }
