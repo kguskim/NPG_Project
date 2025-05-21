@@ -117,23 +117,7 @@ class _HomePageState extends State<HomePage> {
     _todayFuture = fetchTodayRecipe(widget.userId);
   }
 
-  // 만료 알림을 가져오는 API 호출 함수---
-  Future<String> fetchExpireNotice(String userId, int days) async {
-    final uri = Uri.parse(
-      'https://baa8-121-188-29-7.ngrok-free.app/ingredients'
-          '?user_id=${Uri.encodeComponent(userId)}'
-          '&expire_within=$days',
-    );
-    final res = await http.get(uri);
-    if (res.statusCode == 200) {
-      final jsonBody = jsonDecode(utf8.decode(res.bodyBytes)) as Map<
-          String,
-          dynamic>;
-      return jsonBody['notice'] as String;
-    } else {
-      throw Exception('만료 알림 불러오기 실패 (${res.statusCode})');
-    }
-  }
+
   // SharedPreferences에서 구매할 리스트 불러오기
   Future<void> _loadToBuy() async {
     final prefs = await SharedPreferences.getInstance();
