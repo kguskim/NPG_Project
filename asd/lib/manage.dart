@@ -54,6 +54,7 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
 
 /// 냉장고 안의 식재료나 물건 하나를 표현하는 모델 클래스입니다.
 class FridgeItem {
+  final String id;
   final int ingredient_id;
   final String imageUrl;
   final String name;
@@ -66,6 +67,7 @@ class FridgeItem {
   final String memo;
 
   FridgeItem({
+    required this.id,
     required this.imageUrl,
     required this.ingredient_id,
     required this.name,
