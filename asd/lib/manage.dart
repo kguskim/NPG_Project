@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yolo/login_page.dart';
 
 /// SharedPreferences에 저장된 마지막 선택된 냉장고 이름 키
 const _kLastSelectedFridgeKey = 'last_selected_fridge';
@@ -54,14 +55,16 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
 class FridgeItem {
   final String id;
   final String imageUrl;
+  final int ingredient_id;
 
-  FridgeItem({required this.id, required this.imageUrl});
+  FridgeItem(
+      {required this.id, required this.imageUrl, required this.ingredient_id});
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
     return FridgeItem(
-      id: json['user_id'].toString(),
-      imageUrl: json['image'],
-    );
+        id: json['user_id'].toString(),
+        imageUrl: json['image'],
+        ingredient_id: json['ingredient_id']);
   }
 }
 
@@ -140,6 +143,7 @@ class _ManagePageState extends State<ManagePage> {
 
   /// 아이템 삭제
   Future<void> _deleteItem(String id) async {
+    showSnackBar(context, new Text(id));
     final uri =
         Uri.parse('https://baa8-121-188-29-7.ngrok-free.app/ingredients/$id');
     final response = await http.delete(uri);
@@ -149,7 +153,7 @@ class _ManagePageState extends State<ManagePage> {
   }
 
   Widget _buildImage(String url) {
-    if (url.startsWith('http://') || url.startsWith('https://')){
+    if (url.startsWith('http://') || url.startsWith('https://')) {
       return Image.network(
         url,
         fit: BoxFit.cover,
@@ -157,7 +161,7 @@ class _ManagePageState extends State<ManagePage> {
         height: double.infinity,
         errorBuilder: (ctx, err, st) => const Icon(Icons.broken_image),
       );
-    } else{
+    } else {
       final filePath = url.replaceFirst(RegExp(r'^file://'), '');
       final file = File(filePath);
       return Image.file(
@@ -208,7 +212,7 @@ class _ManagePageState extends State<ManagePage> {
                     top: 4,
                     right: 4,
                     child: GestureDetector(
-                      onTap: () => _deleteItem(item.id),
+                      onTap: () => _deleteItem(item.ingredient_id.toString()),
                       child: const CircleAvatar(
                         radius: 12,
                         backgroundColor: Colors.black45,
@@ -305,8 +309,6 @@ class _ManagePageState extends State<ManagePage> {
               ],
             ),
             const SizedBox(height: 8),
-
-            /// 바꿔야 할 부분
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
