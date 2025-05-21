@@ -366,16 +366,39 @@ class _HomePageState extends State<HomePage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: snap.data!
-                                          .map((p) => Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 4),
+                                          .asMap()
+                                          .entries
+                                          .map((e) {
+                                        final p = e.value;
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment
+                                              .start,
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () =>
+                                                  Navigator.push(
+                                                    ctx,
+                                                    MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            NoticeBoard(
+                                                                noticeId: p
+                                                                    .id)),
+                                                  ),
+                                              child: Padding(
+                                                padding: const EdgeInsets
+                                                    .symmetric(vertical: 4.0),
                                                 child: Text(p.title,
                                                     style: const TextStyle(
-                                                        decoration:
-                                                            TextDecoration
-                                                                .none)),
-                                              ))
+                                                        decoration: TextDecoration
+                                                            .none, color: Colors
+                                                        .black)),
+                                              ),
+                                            ),
+                                            if (e.key < snap.data!.length -
+                                                1) const Divider(height: 1),
+                                          ],
+                                        );
+                                      })
                                           .toList(),
                                     );
                                   },
