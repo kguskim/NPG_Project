@@ -57,27 +57,13 @@ class FridgeItem {
   final String id;
   final int ingredient_id;
   final String imageUrl;
-  final String name;
-  final String alias;
-  final int quantity;
-  final String category;
-  final DateTime boughtAt;
-  final DateTime expiresAt;
-  final String areaId;
-  final String memo;
+  
 
   FridgeItem({
     required this.id,
     required this.imageUrl,
     required this.ingredient_id,
-    required this.name,
-    required this.alias,
-    required this.quantity,
-    required this.category,
-    required this.boughtAt,
-    required this.expiresAt,
-    required this.areaId,
-    required this.memo,
+
   });
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
