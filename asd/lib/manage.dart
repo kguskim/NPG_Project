@@ -156,26 +156,25 @@ class _ManagePageState extends State<ManagePage> {
     }
   }
 
-  Widget _buildImage(String url) {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (ctx, err, st) => const Icon(Icons.broken_image),
-      );
-    } else {
-      final filePath = url.replaceFirst(RegExp(r'^file://'), '');
-      final file = File(filePath);
-      return Image.file(
-        file,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (ctx, err, st) => const Icon(Icons.broken_image),
-      );
-    }
+  Widget _buildImage(String imageUrl) {
+    // 만약 imageUrl이 상대 경로로 오면, 전체 URL로 변환
+    const baseUrl = 'https://baa8-121-188-29-7.ngrok-free.app';
+
+    final fullUrl = imageUrl.startsWith('http')
+        ? imageUrl
+        : '$baseUrl$imageUrl'; // 상대 경로 처리
+
+    return Image.network(
+      fullUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return const Icon(Icons.broken_image);
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
   }
 
   Widget _buildPartitionWithItems(List<FridgeItem> items) {
