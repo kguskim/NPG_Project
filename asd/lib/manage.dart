@@ -1,5 +1,5 @@
 // lib/manage_page.dart
-
+import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -148,6 +148,29 @@ class _ManagePageState extends State<ManagePage> {
     }
   }
 
+  Widget _buildImage(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')){
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (ctx, err, st) => const Icon(Icons.broken_image),
+      );
+    } else{
+      final filePath = url.replaceFirst(RegExp(r'^file://'), '');
+      final file = File(filePath);
+      return Image.file(
+        file,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        // 파일이 없거나 접근 불가할 때 placeholder
+        errorBuilder: (ctx, err, st) => const Icon(Icons.broken_image),
+      );
+    }
+  }
+
   Widget _buildPartitionWithItems(List<FridgeItem> items) {
     final section =
         _compartments.isNotEmpty ? _compartments[_currentCompartment] : '';
@@ -179,12 +202,7 @@ class _ManagePageState extends State<ManagePage> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(6),
-                    child: Image.network(
-                      item.imageUrl,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
+                    child: _buildImage(item.imageUrl),
                   ),
                   Positioned(
                     top: 4,
