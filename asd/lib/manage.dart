@@ -358,7 +358,7 @@ class _ManagePageState extends State<ManagePage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('식재료 정보 수정'),
+        title: const Text('식재료 정보'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
