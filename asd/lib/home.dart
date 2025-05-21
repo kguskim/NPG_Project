@@ -282,66 +282,12 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 32),
 
-                    // ─── 오늘의 메뉴 영역 ───
-                    const Text('오늘의 메뉴',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    FutureBuilder<RecipeModel>(
-                      future: _todayFuture,
-                      builder: (ctx, snap) {
-                        if (snap.connectionState == ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        if (snap.hasError) {
-                          return const Text('오늘의 메뉴 불러오기 실패');
-                        }
-                        final today = snap.data!;
-                        return Column(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => DetailedRecipePage(
-                                      imageUrls: today.stepImages,
-                                      steps: today.stepDetails,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Image.network(
-                                  today.imageUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      const Icon(Icons.broken_image),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(today.title,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold)),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 32),
 
                     // ─── 공지사항 영역 ───
                     IntrinsicHeight(
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+
                         children: [
                           // 공지사항
                           Expanded(
@@ -406,6 +352,79 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                           ),
+                          // ─── 오늘의 메뉴 영역 ───
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '오늘의 메뉴',
+                                  style: TextStyle(fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                FutureBuilder<RecipeModel>(
+                                  future: _todayFuture,
+                                  builder: (ctx, snap) {
+                                    if (snap.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Center(
+                                          child: CircularProgressIndicator());
+                                    }
+                                    if (snap.hasError) {
+                                      return const Text('오늘의 메뉴 불러오기 실패');
+                                    }
+                                    final today = snap.data!;
+                                    return Column(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    DetailedRecipePage(
+                                                      imageUrls: today
+                                                          .stepImages,
+                                                      steps: today.stepDetails,
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            width: 100,
+                                            height: 100,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade200,
+                                              borderRadius: BorderRadius
+                                                  .circular(8),
+                                            ),
+                                            child: Image.network(
+                                              today.imageUrl,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                              const Icon(Icons.broken_image),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          today.title,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(width: 16),
                         ],
                       ),
                     ),
