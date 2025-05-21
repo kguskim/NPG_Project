@@ -43,8 +43,7 @@ class TodayDetailedRecipePage extends StatelessWidget {
               // 실제 이미지가 있으면 사용, 없으면 플레이스홀더 URL 출력
               final imageUrl = pairIndex < imageUrls.length
                   ? imageUrls[pairIndex]
-                  : 'https://via.placeholder.com/400x200.png?text=Step+${pairIndex +
-                  1}';
+                  : 'https://via.placeholder.com/400x200.png?text=Step+${pairIndex + 1}';
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,18 +54,17 @@ class TodayDetailedRecipePage extends StatelessWidget {
                       imageUrl,
                       fit: BoxFit.cover,
                       height: 200,
-                      errorBuilder: (_, __, ___) =>
-                          Container(
-                            height: 200,
-                            color: Colors.grey.shade200,
-                            child: const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 48,
-                                color: Colors.grey,
-                              ),
-                            ),
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 200,
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: Colors.grey,
                           ),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),

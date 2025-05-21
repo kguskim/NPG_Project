@@ -27,12 +27,11 @@ class DataService {
     await Future.delayed(const Duration(milliseconds: 500));
     return List.generate(
       count,
-          (i) =>
-          Post(
-            id: count - i,
-            title: '공지 ${count - i}',
-            date: DateTime.now().subtract(Duration(days: i)),
-          ),
+      (i) => Post(
+        id: count - i,
+        title: '공지 ${count - i}',
+        date: DateTime.now().subtract(Duration(days: i)),
+      ),
     );
   }
 }
@@ -91,17 +90,17 @@ class _HomePageState extends State<HomePage> {
             onChanged: (v) => text = v,
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
                 child: const Text('취소')),
-            TextButton(onPressed: () => Navigator.pop(context, text),
+            TextButton(
+                onPressed: () => Navigator.pop(context, text),
                 child: const Text('추가')),
           ],
         );
       },
     );
-    if (input != null && input
-        .trim()
-        .isNotEmpty) {
+    if (input != null && input.trim().isNotEmpty) {
       _toBuy.add(input.trim());
       await _saveToBuy();
       setState(() {});
@@ -117,8 +116,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final expiredNotice = '소비기한이 3일 남은 식재료';
-    final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(
-        DateTime.now());
+    final formattedDate =
+        DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
 
     return Scaffold(
       appBar: AppBar(
@@ -129,18 +128,20 @@ class _HomePageState extends State<HomePage> {
               icon: const Icon(Icons.person),
               onPressed: () async {
                 final button = ctx.findRenderObject() as RenderBox;
-                final overlay = Overlay.of(ctx)!.context
-                    .findRenderObject() as RenderBox;
-                final pos = button.localToGlobal(
-                    Offset.zero, ancestor: overlay);
+                final overlay =
+                    Overlay.of(ctx)!.context.findRenderObject() as RenderBox;
+                final pos =
+                    button.localToGlobal(Offset.zero, ancestor: overlay);
                 final selected = await showMenu<String>(
                   context: ctx,
                   position: RelativeRect.fromLTRB(
-                    pos.dx, pos.dy + button.size.height,
-                    pos.dx + button.size.width, pos.dy,
+                    pos.dx,
+                    pos.dy + button.size.height,
+                    pos.dx + button.size.width,
+                    pos.dy,
                   ),
-                  items: [const PopupMenuItem(value: 'logout', child: Text(
-                      'LOGOUT'))
+                  items: [
+                    const PopupMenuItem(value: 'logout', child: Text('LOGOUT'))
                   ],
                 );
                 if (selected == 'logout') {
@@ -168,8 +169,9 @@ class _HomePageState extends State<HomePage> {
                     // 만료 알림
                     Text(expiredNotice, style: const TextStyle(fontSize: 14)),
                     const SizedBox(height: 8),
-                    Center(child: Text(
-                        formattedDate, style: const TextStyle(fontSize: 16))),
+                    Center(
+                        child: Text(formattedDate,
+                            style: const TextStyle(fontSize: 16))),
                     const SizedBox(height: 24),
 
                     // 네비 버튼
@@ -179,32 +181,31 @@ class _HomePageState extends State<HomePage> {
                         _NavButton(
                           icon: Icons.emoji_food_beverage,
                           label: '재료',
-                          onTap: () =>
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => App(userId: widget.userId)),
-                              ),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => App(userId: widget.userId)),
+                          ),
                         ),
                         _NavButton(
                           icon: Icons.kitchen,
                           label: '냉장고 관리',
-                          onTap: () =>
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const ManagePage()),
-                              ),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    ManagePage(userId: widget.userId)),
+                          ),
                         ),
                         _NavButton(
                           icon: Icons.menu_book,
                           label: '레시피',
-                          onTap: () =>
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) =>
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
                                     RecipePage(userId: widget.userId)),
-                              ),
+                          ),
                         ),
                       ],
                     ),
@@ -233,11 +234,10 @@ class _HomePageState extends State<HomePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        DetailedRecipePage(
-                                          imageUrls: today.stepImages,
-                                          steps: today.stepDetails,
-                                        ),
+                                    builder: (_) => DetailedRecipePage(
+                                      imageUrls: today.stepImages,
+                                      steps: today.stepDetails,
+                                    ),
                                   ),
                                 );
                               },
@@ -252,7 +252,7 @@ class _HomePageState extends State<HomePage> {
                                   today.imageUrl,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) =>
-                                  const Icon(Icons.broken_image),
+                                      const Icon(Icons.broken_image),
                                 ),
                               ),
                             ),
@@ -277,31 +277,33 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('공지사항',
-                                    style: TextStyle(fontSize: 18,
+                                    style: TextStyle(
+                                        fontSize: 18,
                                         fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 8),
                                 FutureBuilder<List<Post>>(
                                   future: _postsFuture,
                                   builder: (ctx, snap) {
                                     if (snap.connectionState !=
-                                        ConnectionState.done ||
+                                            ConnectionState.done ||
                                         snap.hasError ||
                                         snap.data!.isEmpty) {
                                       return const Text('공지 로드 실패');
                                     }
                                     return Column(
-                                      crossAxisAlignment: CrossAxisAlignment
-                                          .start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: snap.data!
-                                          .map((p) =>
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 4),
-                                            child: Text(p.title,
-                                                style: const TextStyle(
-                                                    decoration: TextDecoration
-                                                        .none)),
-                                          ))
+                                          .map((p) => Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 4),
+                                                child: Text(p.title,
+                                                    style: const TextStyle(
+                                                        decoration:
+                                                            TextDecoration
+                                                                .none)),
+                                              ))
                                           .toList(),
                                     );
                                   },

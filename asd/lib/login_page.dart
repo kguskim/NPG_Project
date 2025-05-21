@@ -15,7 +15,7 @@ class LoginPage extends StatelessWidget {
 
     try {
       final url = Uri.parse(
-          'https://efb4-121-188-29-7.ngrok-free.app/users/login'); // 실제 주소로 바꿔주세요
+          'https://baa8-121-188-29-7.ngrok-free.app/users/login'); // 실제 주소로 바꿔주세요
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -24,7 +24,8 @@ class LoginPage extends StatelessWidget {
       if (response.statusCode == 200 && response.body == 'success') {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (BuildContext context) => HomePage(userId: id)),
+          MaterialPageRoute(
+              builder: (BuildContext context) => HomePage(userId: id)),
         );
       } else {
         showSnackBar(context, const Text('아이디와 비밀번호를 확인해 주세요.'));

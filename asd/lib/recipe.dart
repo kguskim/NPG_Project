@@ -9,7 +9,7 @@ import 'detailed_recipe.dart';
 /// 추천 레시피 가져오기 (userId 로 3개)
 Future<List<RecipeModel>> fetchUserRecipes(String userId) async {
   final uri = Uri.parse(
-    'https://efb4-121-188-29-7.ngrok-free.app/recipes/recommend/advanced/top3'
+    'https://baa8-121-188-29-7.ngrok-free.app/recipes/recommend/advanced/top3'
     '?user_id=${Uri.encodeComponent(userId)}',
   );
   final response = await http.get(uri);
@@ -72,7 +72,7 @@ class _RecipePageState extends State<RecipePage> {
     }
 
     final uri = Uri.parse(
-      'https://efb4-121-188-29-7.ngrok-free.app/recipes/search'
+      'https://baa8-121-188-29-7.ngrok-free.app/recipes/search'
       '?keyword=${Uri.encodeComponent(keyword)}',
     );
 
@@ -109,8 +109,7 @@ class _RecipePageState extends State<RecipePage> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back),
-                  onPressed: () =>
-                      Navigator.of(context).maybePop(),
+                  onPressed: () => Navigator.of(context).maybePop(),
                 ),
                 const Spacer(),
                 const Text(
@@ -212,8 +211,7 @@ class _RecipePageState extends State<RecipePage> {
                                           _pageController
                                               .jumpToPage(recipes.length);
                                           page = recipes.length;
-                                        } else if (page ==
-                                            itemCount - 1) {
+                                        } else if (page == itemCount - 1) {
                                           _pageController.jumpToPage(1);
                                           page = 1;
                                         }
@@ -246,10 +244,9 @@ class _RecipePageState extends State<RecipePage> {
                                               width: double.infinity,
                                               height: double.infinity,
                                               fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (_, __, ___) => Container(
-                                                color:
-                                                    Colors.grey.shade200,
+                                              errorBuilder: (_, __, ___) =>
+                                                  Container(
+                                                color: Colors.grey.shade200,
                                                 child: const Center(
                                                   child: Icon(
                                                     Icons.broken_image,
@@ -270,8 +267,7 @@ class _RecipePageState extends State<RecipePage> {
                                       top: 0,
                                       bottom: 0,
                                       child: IconButton(
-                                        icon: const Icon(
-                                            Icons.chevron_left,
+                                        icon: const Icon(Icons.chevron_left,
                                             size: 32),
                                         onPressed: () =>
                                             _pageController.previousPage(
@@ -288,8 +284,7 @@ class _RecipePageState extends State<RecipePage> {
                                       top: 0,
                                       bottom: 0,
                                       child: IconButton(
-                                        icon: const Icon(
-                                            Icons.chevron_right,
+                                        icon: const Icon(Icons.chevron_right,
                                             size: 32),
                                         onPressed: () =>
                                             _pageController.nextPage(
@@ -319,22 +314,20 @@ class _RecipePageState extends State<RecipePage> {
                               const Text(
                                 '재료',
                                 style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600),
+                                    fontSize: 16, fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 8),
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Colors.grey.shade300),
+                                    border:
+                                        Border.all(color: Colors.grey.shade300),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
                                     recipes[_currentIndex].ingredients,
-                                    style:
-                                        const TextStyle(fontSize: 14),
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
                               ),

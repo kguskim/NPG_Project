@@ -76,7 +76,7 @@ class InsertPageState extends State<InsertPage> {
     DateTime expiryDate = DateTime(2025, 12, 31);
 
     final TextEditingController nameController =
-        TextEditingController(text: '${widget.data}');
+        TextEditingController(text: widget.data);
     final TextEditingController quantityController =
         TextEditingController(text: '1');
     final TextEditingController typeController =
@@ -192,34 +192,12 @@ class InsertPageState extends State<InsertPage> {
                       expiryDate.day.toString().padLeft(2, '0'),
                   "alias": nameController.text, // 식재료명 (예: 생수, 바나나)
                   "area_id": area_id + 1,
-                  "image": widget.imagePath,
+                  "image": uploadImage(File(widget.imagePath)).toString(),
                   "note": memoController.text,
                   "fridge_id": fridge_id,
                 };
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${data}')),
-                );
-
-                // POST 요청 전송
-                final uri = Uri.parse(
-                    'https://efb4-121-188-29-7.ngrok-free.app/ingredients');
-                final response = await http.post(
-                  uri,
-                  headers: {'Content-Type': 'application/json'},
-                  body: json.encode(data),
-                );
-
-                // 응답 처리
-                if (response.statusCode == 200) {
-                  // 성공 시 이전 화면으로 이동
-                  Navigator.pop(context);
-                } else {
-                  // 실패 시 알림
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('등록 실패: ${response.statusCode}')),
-                  );
-                }
+                registerIngredient(data, widget.imagePath);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.lightBlueAccent,
@@ -307,5 +285,49 @@ class InsertPageState extends State<InsertPage> {
         ),
       ],
     );
+  }
+}
+
+Future<String?> uploadImage(File imageFile) async {
+  final uri =
+      Uri.parse("https://baa8-121-188-29-7.ngrok-free.app/upload-image");
+  final request = http.MultipartRequest('POST', uri);
+  final imageStream = http.ByteStream(imageFile.openRead());
+  final imageLength = await imageFile.length();
+
+  final multipartFile = http.MultipartFile(
+    'file',
+    imageStream,
+    imageLength,
+    filename: imageFile.path.split("/").last,
+  );
+
+  request.files.add(multipartFile);
+  final response = await request.send();
+
+  if (response.statusCode == 200) {
+    final resStr = await response.stream.bytesToString();
+    final jsonData = jsonDecode(resStr);
+    return jsonData['image_url']; // /static/images/abc.jpg
+  } else {
+    return null;
+  }
+}
+
+Future<void> registerIngredient(Map data, String imageUrl) async {
+  final uri = Uri.parse("https://baa8-121-188-29-7.ngrok-free.app/ingredients");
+
+  final body = data;
+
+  final response = await http.post(
+    uri,
+    headers: {"Content-Type": "application/json"},
+    body: json.encode(body),
+  );
+
+  if (response.statusCode == 200) {
+    print("등록 성공");
+  } else {
+    print("등록 실패: ${response.body}");
   }
 }

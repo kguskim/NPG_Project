@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// SharedPreferences에 저장된 마지막 선택된 냉장고 이름 키
 const _kLastSelectedFridgeKey = 'last_selected_fridge';
 
+// 앱을 껐다 켜도 사용자가 마지막에 선택한 냉장고 이름을 기억해두는 함수
 void _saveFridgeName(String fridgeName) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString(_kLastSelectedFridgeKey, fridgeName);
@@ -21,7 +22,7 @@ class GridConfig {
   const GridConfig(this.rows, this.cols);
 }
 
-/// 냉장고 종류 목록
+/// 냉장고 종류 이름 목록
 final List<String> fridges = [
   'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L',
   'LG 모던엣지 냉장고 462L',
@@ -48,7 +49,8 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
   },
 };
 
-/// 냉장고 아이템 모델
+/// 냉장고 안의 식재료나 물건 하나를 표현하는 모델 클래스입니다.
+/// 주로 서버에서 받은 JSON 데이터를 다루기 위해 사용
 class FridgeItem {
   final String id;
   final String imageUrl;
@@ -57,20 +59,23 @@ class FridgeItem {
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
     return FridgeItem(
-      id: json['id'].toString(),
-      imageUrl: json['imageUrl'],
+      id: json['user_id'].toString(),
+      imageUrl: json['image'],
     );
   }
 }
 
 /// 냉장고 관리 페이지
 class ManagePage extends StatefulWidget {
-  const ManagePage({Key? key}) : super(key: key);
+  final String userId;
+
+  const ManagePage({super.key, required this.userId});
 
   @override
   _ManagePageState createState() => _ManagePageState();
 }
 
+/// 냉장고 관리 STATE
 class _ManagePageState extends State<ManagePage> {
   // 드롭다운 목록
   late final List<String> _fridges = fridges;
@@ -88,6 +93,7 @@ class _ManagePageState extends State<ManagePage> {
   // 서버에서 받아올 Future
   late Future<List<FridgeItem>> _itemsFuture;
 
+  // 상태 초기화
   @override
   void initState() {
     super.initState();
@@ -109,9 +115,8 @@ class _ManagePageState extends State<ManagePage> {
 
   /// 현재 선택된 냉장고와 compartment로 아이템 로드
   void _loadItems() {
-    final section = _compartments.isNotEmpty
-        ? _compartments[_currentCompartment]
-        : '';
+    final section =
+        _compartments.isNotEmpty ? _compartments[_currentCompartment] : '';
     _itemsFuture = _fetchItemsFromServer(
       fridge: _selectedFridge,
       compartment: section,
@@ -124,8 +129,7 @@ class _ManagePageState extends State<ManagePage> {
     required String compartment,
   }) async {
     final uri = Uri.parse(
-        'https://example.com/api/fridge?name=${Uri.encodeComponent(
-            fridge)}&section=${Uri.encodeComponent(compartment)}');
+        'https://baa8-121-188-29-7.ngrok-free.app/ingredients?user_id=${widget.userId}');
     final response = await http.get(uri);
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
@@ -134,8 +138,10 @@ class _ManagePageState extends State<ManagePage> {
     return [];
   }
 
+  /// 아이템 삭제
   Future<void> _deleteItem(String id) async {
-    final uri = Uri.parse('https://example.com/api/fridge/delete/$id');
+    final uri =
+        Uri.parse('https://baa8-121-188-29-7.ngrok-free.app/ingredients/$id');
     final response = await http.delete(uri);
     if (response.statusCode == 200) {
       _loadItems();
@@ -143,9 +149,8 @@ class _ManagePageState extends State<ManagePage> {
   }
 
   Widget _buildPartitionWithItems(List<FridgeItem> items) {
-    final section = _compartments.isNotEmpty
-        ? _compartments[_currentCompartment]
-        : '';
+    final section =
+        _compartments.isNotEmpty ? _compartments[_currentCompartment] : '';
     final config = fridgeLayouts[_selectedFridge]?[section];
     if (config == null) return const SizedBox.shrink();
 
@@ -189,8 +194,8 @@ class _ManagePageState extends State<ManagePage> {
                       child: const CircleAvatar(
                         radius: 12,
                         backgroundColor: Colors.black45,
-                        child: Icon(Icons.delete,
-                            size: 16, color: Colors.white),
+                        child:
+                            Icon(Icons.delete, size: 16, color: Colors.white),
                       ),
                     ),
                   ),
@@ -250,11 +255,11 @@ class _ManagePageState extends State<ManagePage> {
                   icon: const Icon(Icons.chevron_left),
                   onPressed: _currentCompartment > 0
                       ? () {
-                    setState(() {
-                      _currentCompartment--;
-                    });
-                    _loadItems();
-                  }
+                          setState(() {
+                            _currentCompartment--;
+                          });
+                          _loadItems();
+                        }
                       : null,
                 ),
                 Expanded(
@@ -272,32 +277,31 @@ class _ManagePageState extends State<ManagePage> {
                   icon: const Icon(Icons.chevron_right),
                   onPressed: _currentCompartment < _compartments.length - 1
                       ? () {
-                    setState(() {
-                      _currentCompartment++;
-                    });
-                    _loadItems();
-                  }
+                          setState(() {
+                            _currentCompartment++;
+                          });
+                          _loadItems();
+                        }
                       : null,
                 ),
               ],
             ),
             const SizedBox(height: 8),
+
+            /// 바꿔야 할 부분
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
-                  border:
-                  Border.all(color: Colors.grey.shade400, width: 2),
+                  border: Border.all(color: Colors.grey.shade400, width: 2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(8),
                 child: FutureBuilder<List<FridgeItem>>(
                   future: _itemsFuture,
                   builder: (context, snap) {
-                    if (snap.connectionState ==
-                        ConnectionState.waiting) {
-                      return const Center(
-                          child: CircularProgressIndicator());
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
                     }
                     final items = snap.data ?? [];
                     return _buildPartitionWithItems(items);
