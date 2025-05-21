@@ -57,20 +57,23 @@ class FridgeItem {
   final String id;
   final int ingredient_id;
   final String imageUrl;
-  
+  final int fridge_id;
+  final int area_id;
 
-  FridgeItem({
-    required this.id,
-    required this.imageUrl,
-    required this.ingredient_id,
-
-  });
+  FridgeItem(
+      {required this.id,
+      required this.imageUrl,
+      required this.ingredient_id,
+      required this.fridge_id,
+      required this.area_id});
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
     return FridgeItem(
       id: json['user_id'].toString(),
       imageUrl: json['image'],
       ingredient_id: json['ingredient_id'],
+      fridge_id: json['fridge_id'],
+      area_id: json['area_id'],
     );
   }
 
@@ -83,9 +86,24 @@ class FridgeItem {
       id: id ?? this.id,
       imageUrl: imageUrl ?? this.imageUrl,
       ingredient_id: ingredient_id ?? this.ingredient_id,
+      fridge_id: fridge_id ?? this.fridge_id,
+      area_id: area_id ?? this.area_id,
     );
   }
 }
+
+const Map<int, String> fridgeIdToName = {
+  0: 'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L',
+  1: 'LG 모던엣지 냉장고 462L',
+  2: '신규 냉장고',
+};
+
+// 예시 매핑 (서버 ID → UI에서 사용하는 이름)
+const Map<int, Map<int, String>> areaIdToName = {
+  0: {1: '냉장실', 2: '냉동실', 3: '냉장실 문칸'},
+  1: {1: '냉장실', 2: '냉동실', 3: '냉장실 문칸'},
+  2: {1: '냉장실', 2: '냉동실', 3: '문칸 상단', 4: '문칸 하단'},
+};
 
 /// 냉장고 관리 페이지
 class ManagePage extends StatefulWidget {
@@ -187,6 +205,13 @@ class _ManagePageState extends State<ManagePage> {
     const spacing = 12.0;
     const borderWidth = 3.0;
 
+    // ✅ 현재 냉장고와 현재 섹션(area)에 해당하는 아이템만 필터링
+    final filteredItems = items.where((item) {
+      final itemFridgeName = fridgeIdToName[item.fridge_id];
+      return itemFridgeName == _selectedFridge &&
+          item.area_id == _currentCompartment;
+    }).toList();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalH = constraints.maxHeight;
@@ -203,8 +228,8 @@ class _ManagePageState extends State<ManagePage> {
           ),
           itemCount: config.rows * config.cols,
           itemBuilder: (context, idx) {
-            if (idx < items.length) {
-              final item = items[idx];
+            if (idx < filteredItems.length) {
+              final item = filteredItems[idx];
               return GestureDetector(
                 onTap: () => _showItemDetailDialog(item),
                 child: Stack(
