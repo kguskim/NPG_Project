@@ -343,6 +343,7 @@ class _HomePageState extends State<HomePage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 공지사항
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
