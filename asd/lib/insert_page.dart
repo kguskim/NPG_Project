@@ -199,7 +199,7 @@ class InsertPageState extends State<InsertPage> {
                   "fridge_id": fridge_id,
                 };
 
-                registerIngredient(data, widget.imagePath);
+                registerIngredient(context, data, widget.imagePath);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.lightBlueAccent,
@@ -316,7 +316,8 @@ Future<String?> uploadImage(File imageFile) async {
   }
 }
 
-Future<void> registerIngredient(Map data, String imageUrl) async {
+Future<void> registerIngredient(
+    BuildContext context, Map data, String imageUrl) async {
   final uri = Uri.parse("https://baa8-121-188-29-7.ngrok-free.app/ingredients");
 
   final body = data;
@@ -328,8 +329,18 @@ Future<void> registerIngredient(Map data, String imageUrl) async {
   );
 
   if (response.statusCode == 200) {
-    print("등록 성공");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('등록 성공')),
+    );
+
+    // 약간의 딜레이를 줘서 SnackBar가 먼저 보이도록 함
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // 현재 페이지 닫기
+    Navigator.pop(context);
   } else {
-    print("등록 실패: ${response.body}");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('등록 실패: ${response.body}')),
+    );
   }
 }

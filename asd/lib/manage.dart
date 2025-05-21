@@ -211,19 +211,6 @@ class _ManagePageState extends State<ManagePage> {
                       borderRadius: BorderRadius.circular(6),
                       child: _buildImage(item.imageUrl),
                     ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: () => _deleteItem(item.ingredient_id.toString()),
-                        child: const CircleAvatar(
-                          radius: 12,
-                          backgroundColor: Colors.black45,
-                          child:
-                              Icon(Icons.delete, size: 16, color: Colors.white),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               );
