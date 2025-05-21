@@ -292,7 +292,7 @@ class _HomePageState extends State<HomePage> {
                           // 공지사항
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 const Text('공지사항',
                                     style: TextStyle(
@@ -355,7 +355,7 @@ class _HomePageState extends State<HomePage> {
                           // ─── 오늘의 메뉴 영역 ───
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 const Text(
                                   '오늘의 메뉴',
