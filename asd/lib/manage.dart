@@ -54,7 +54,7 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
 
 /// 냉장고 안의 식재료나 물건 하나를 표현하는 모델 클래스입니다.
 class FridgeItem {
-  final String user_id;
+  final String id;
   final int ingredient_id;
   final String imageUrl;
   final int fridge_id;
@@ -168,7 +168,7 @@ class _ManagePageState extends State<ManagePage> {
 
   Future<void> _deleteItem(String id) async {
     final uri = Uri.parse(
-        'https://a4a5-121-188-29-7.ngrok-free.app/ingredients/$id',
+      'https://baa8-121-188-29-7.ngrok-free.app/ingredients/$id',
     );
     final response = await http.delete(uri);
     if (response.statusCode == 200) {
