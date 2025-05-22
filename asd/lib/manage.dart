@@ -309,12 +309,13 @@ class _ManagePageState extends State<ManagePage> {
         child: Column(
           children: [
             DropdownButtonFormField<String>(
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: '냉장고 종류',
                 border: OutlineInputBorder(),
               ),
               items: _fridges
-                  .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                  .map((f) => DropdownMenuItem(value: f, child: Text(f, overflow: TextOverflow.ellipsis,)))
                   .toList(),
               value: _selectedFridge,
               onChanged: (v) {
