@@ -54,73 +54,40 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
 
 /// 냉장고 안의 식재료나 물건 하나를 표현하는 모델 클래스입니다.
 class FridgeItem {
-  final String id;
+  final String user_id;
   final int ingredient_id;
-  final int ingredient_name;
-  final String alias;
-  final int quantity;
-  final DateTime purchase_date;
-  final DateTime expiration_date;
   final String imageUrl;
   final int fridge_id;
   final int area_id;
-  final String memo;
 
   FridgeItem(
       {required this.user_id,
-        required this.ingredient_id,
-        required this.ingredient_name,
-        required this.alias,
-        required this.imageUrl,
-        required this.quantity,
-        required this.purchase_date,
-        required this.expiration_date,
-        required this.fridge_id,
-        required this.area_id,
-        required this.memo,
-      });
+      required this.imageUrl,
+      required this.ingredient_id,
+      required this.fridge_id,
+      required this.area_id});
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
     return FridgeItem(
       user_id: json['user_id'].toString(),
       ingredient_id: json['ingredient_id'],
-      ingredient_name: json['ingredient_name'],
-      alias: json['alias'],
       imageUrl: json['image'],
-      quantity: json['quantity'],
-      purchase_date: json['purchase_date'],
-      expiration_date: json['expiration_date'],
       fridge_id: json['fridge_id'],
       area_id: json['area_id'],
-      memo: json['memo'],
     );
   }
 
   FridgeItem copyWith({
-    String? user_id,
-    int? ingredient_id,
-    int? ingredient_name,
-    String? alias,
+    String? id,
     String? imageUrl,
-    int? quantity,
-    DateTime? purchase_date,
-    DateTime? expiration_date,
-    int? fridge_id,
-    int? area_id,
-    String? memo,
+    int? ingredient_id,
   }) {
     return FridgeItem(
-      user_id:        user_id        ?? this.user_id,
-      ingredient_id:  ingredient_id  ?? this.ingredient_id,
-      ingredient_name:ingredient_name ?? this.ingredient_name,
-      alias:          alias          ?? this.alias,
-      imageUrl:       imageUrl       ?? this.imageUrl,
-      quantity:       quantity       ?? this.quantity,
-      purchase_date:  purchase_date  ?? this.purchase_date,
-      expiration_date:expiration_date?? this.expiration_date,
-      fridge_id:      fridge_id      ?? this.fridge_id,
-      area_id:        area_id        ?? this.area_id,
-      memo:           memo           ?? this.memo,
+      user_id: id ?? this.user_id,
+      imageUrl: imageUrl ?? this.imageUrl,
+      ingredient_id: ingredient_id ?? this.ingredient_id,
+      fridge_id: fridge_id ?? this.fridge_id,
+      area_id: area_id ?? this.area_id,
     );
   }
 }
@@ -251,6 +218,15 @@ class _ManagePageState extends State<ManagePage> {
         final cellH = (totalH - (config.rows - 1) * spacing - 2 * borderWidth) /
             config.rows;
 
+        // 최대 3개씩 묶어서 그룹화
+        final groupedItems = <List<FridgeItem>>[];
+        for (var i = 0; i < filteredItems.length; i += 3) {
+          groupedItems.add(filteredItems.sublist(
+            i,
+            i + 3 > filteredItems.length ? filteredItems.length : i + 3,
+          ));
+        }
+
         return GridView.builder(
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -261,29 +237,39 @@ class _ManagePageState extends State<ManagePage> {
           ),
           itemCount: config.rows * config.cols,
           itemBuilder: (context, idx) {
-            if (idx < filteredItems.length) {
-              final item = filteredItems[idx];
-              return GestureDetector(
-                onTap: () => _showItemDetailDialog(item),
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: _buildImage(item.imageUrl),
+            final group = idx < groupedItems.length ? groupedItems[idx] : [];
+
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                  color: Colors.grey.shade400,
+                  width: borderWidth,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: group.map((item) {
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showItemDetailDialog(item),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: _buildImage(item.imageUrl),
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-              );
-            } else {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                      color: Colors.grey.shade400, width: borderWidth),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              );
-            }
+                  );
+                }).toList(),
+              ),
+            );
           },
         );
       },
@@ -388,13 +374,18 @@ class _ManagePageState extends State<ManagePage> {
 
   /// 선택된 식재료 정보 수정/삭제 다이얼로그
   void _showItemDetailDialog(FridgeItem item) {
-    final aliasCtrl = TextEditingController(text: item.alias);
-    final nameCtrl = TextEditingController(text: item.ingredient_name.toString());
-    final qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final boughtCtrl = TextEditingController(text: DateFormat('yyyy-MM-dd').format(item.purchase_date));
-    final expireCtrl = TextEditingController(text: DateFormat('yyyy-MM-dd').format(item.expiration_date));
-    final memoCtrl = TextEditingController(text: item.memo);
-    final areaCtrl = TextEditingController(text: item.area_id.toString());
+    final aliasCtrl =
+        TextEditingController(text: item.ingredient_id.toString());
+    final nameCtrl = TextEditingController(text: item.user_id);
+    final qtyCtrl = TextEditingController(text: '1');
+    final categoryCtrl = TextEditingController(text: '');
+    final boughtCtrl = TextEditingController(
+        text: DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    final expireCtrl = TextEditingController(
+        text: DateFormat('yyyy-MM-dd')
+            .format(DateTime.now().add(Duration(days: 7))));
+    final memoCtrl = TextEditingController(text: '');
+    final areaCtrl = TextEditingController(text: '');
 
     showDialog(
       context: context,
@@ -419,6 +410,9 @@ class _ManagePageState extends State<ManagePage> {
                   controller: qtyCtrl,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: '수량')),
+              TextFormField(
+                  controller: categoryCtrl,
+                  decoration: const InputDecoration(labelText: '카테고리')),
               TextFormField(
                   controller: boughtCtrl,
                   decoration:
