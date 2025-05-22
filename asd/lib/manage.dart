@@ -63,29 +63,34 @@ class FridgeItem {
   final int quantity;
   final String purchase_date;
   final String expiration_date;
+  final String memo;
 
-  FridgeItem(
-      {required this.user_id,
-      required this.imageUrl,
-      required this.ingredient_id,
-      required this.fridge_id,
-      required this.area_id,
-      required this.alias,
-      required this.quantity,
-      required this.expiration_date,
-      required this.purchase_date});
+  FridgeItem({
+    required this.user_id,
+    required this.imageUrl,
+    required this.ingredient_id,
+    required this.fridge_id,
+    required this.area_id,
+    required this.alias,
+    required this.quantity,
+    required this.expiration_date,
+    required this.purchase_date,
+    required this.memo,
+  });
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
     return FridgeItem(
-        user_id: json['user_id'].toString(),
-        ingredient_id: json['ingredient_id'],
-        imageUrl: json['image'],
-        fridge_id: json['fridge_id'],
-        area_id: json['area_id'],
-        alias: json['alias'],
-        quantity: json['quantity'],
-        expiration_date: json['expiration_date'],
-        purchase_date: json['purchase_date']);
+      user_id: json['user_id'].toString(),
+      ingredient_id: json['ingredient_id'],
+      imageUrl: json['image'],
+      fridge_id: json['fridge_id'],
+      area_id: json['area_id'],
+      alias: json['alias'],
+      quantity: json['quantity'],
+      expiration_date: json['expiration_date'],
+      purchase_date: json['purchase_date'],
+      memo: json['note'],
+    );
   }
 
   FridgeItem copyWith({
@@ -102,7 +107,8 @@ class FridgeItem {
         alias: alias ?? this.alias,
         quantity: quantity ?? this.quantity,
         expiration_date: expiration_date ?? this.expiration_date,
-        purchase_date: purchase_date ?? this.purchase_date);
+        purchase_date: purchase_date ?? this.purchase_date,
+        memo: memo ?? this.memo);
   }
 }
 
@@ -182,7 +188,7 @@ class _ManagePageState extends State<ManagePage> {
 
   Future<void> _deleteItem(String id) async {
     final uri = Uri.parse(
-      'https://baa8-121-188-29-7.ngrok-free.app/ingredients/$id',
+      'https://a4a5-121-188-29-7.ngrok-free.app/ingredients/$id',
     );
     final response = await http.delete(uri);
     if (response.statusCode == 200) {
@@ -397,7 +403,8 @@ class _ManagePageState extends State<ManagePage> {
         TextEditingController(text: utf8.decode(item.purchase_date.codeUnits));
     final expireCtrl = TextEditingController(
         text: utf8.decode(item.expiration_date.codeUnits));
-    final memoCtrl = TextEditingController(text: '');
+    final memoCtrl =
+        TextEditingController(text: utf8.decode(item.memo.codeUnits));
     final areaCtrl = TextEditingController(text: '');
 
     showDialog(
@@ -446,6 +453,20 @@ class _ManagePageState extends State<ManagePage> {
           ElevatedButton(
             onPressed: () async {
               // TODO: 서버에 업데이트 API 호출 (_updateItemOnServer)
+              final data = {
+                "user_id": item.user_id,
+                "ingredient_name": aliasCtrl.text,
+                "quantity": int.parse(qtyCtrl.text),
+                "purchase_date": boughtCtrl.text,
+                "expiration_date": expireCtrl.text,
+                "alias": aliasCtrl.text,
+                "area_id": item.area_id,
+                "image": item.imageUrl,
+                "note": memoCtrl.text,
+                "fridge_id": item.fridge_id,
+              };
+
+              await _updateItemOnServer(item, data);
               Navigator.of(context).pop();
               _loadItems();
             },
@@ -461,13 +482,15 @@ class _ManagePageState extends State<ManagePage> {
       FridgeItem item, Map<String, dynamic> data) async {
     final uri = Uri.parse(
         'https://a4a5-121-188-29-7.ngrok-free.app/ingredients/${item.ingredient_id}');
-    final res = await http.patch(
+    final res = await http.put(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(data),
+      body: json.encode(data),
     );
-    if (res.statusCode != 200) {
-      throw Exception('수정 실패: ${res.statusCode}');
+    if (res.statusCode == 200) {
+      showSnackBar(context, const Text('수정 성공!'));
+    } else {
+      showSnackBar(context, new Text('수정 실패 ${res.statusCode} ${res.body}'));
     }
   }
 }
