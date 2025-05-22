@@ -156,7 +156,7 @@ class _ManagePageState extends State<ManagePage> {
     required String compartment,
   }) async {
     final uri = Uri.parse(
-      'https://baa8-121-188-29-7.ngrok-free.app/ingredients?user_id=${widget.userId}',
+      'https://a4a5-121-188-29-7.ngrok-free.app/ingredients?user_id=${widget.userId}',
     );
     final response = await http.get(uri);
     if (response.statusCode == 200) {
@@ -178,7 +178,7 @@ class _ManagePageState extends State<ManagePage> {
 
   Widget _buildImage(String imageUrl) {
     // 만약 imageUrl이 상대 경로로 오면, 전체 URL로 변환
-    const baseUrl = 'https://baa8-121-188-29-7.ngrok-free.app';
+    const baseUrl = 'https://a4a5-121-188-29-7.ngrok-free.app';
 
     final fullUrl = imageUrl.startsWith('http')
         ? imageUrl
@@ -436,8 +436,8 @@ class _ManagePageState extends State<ManagePage> {
   /// 서버에 PATCH 요청으로 아이템 정보 업데이트
   Future<void> _updateItemOnServer(
       FridgeItem item, Map<String, dynamic> data) async {
-    final uri =
-        Uri.parse('https://your.api.com/ingredients/${item.ingredient_id}');
+    final uri = Uri.parse(
+        'https://a4a5-121-188-29-7.ngrok-free.app/ingredients/${item.ingredient_id}');
     final res = await http.patch(
       uri,
       headers: {'Content-Type': 'application/json'},

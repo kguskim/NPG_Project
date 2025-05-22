@@ -292,7 +292,7 @@ class InsertPageState extends State<InsertPage> {
 
 Future<String?> uploadImage(File imageFile) async {
   final uri =
-      Uri.parse("https://baa8-121-188-29-7.ngrok-free.app/upload-image");
+      Uri.parse("https://a4a5-121-188-29-7.ngrok-free.app/upload-image");
   final request = http.MultipartRequest('POST', uri);
   final imageStream = http.ByteStream(imageFile.openRead());
   final imageLength = await imageFile.length();
@@ -318,7 +318,7 @@ Future<String?> uploadImage(File imageFile) async {
 
 Future<void> registerIngredient(
     BuildContext context, Map data, String imageUrl) async {
-  final uri = Uri.parse("https://baa8-121-188-29-7.ngrok-free.app/ingredients");
+  final uri = Uri.parse("https://a4a5-121-188-29-7.ngrok-free.app/ingredients");
 
   final body = data;
 

@@ -61,9 +61,9 @@ class DataService {
 /// 만료 알림을 가져오는 API 호출 함수
 Future<String> fetchExpireNotice(String userId, int days) async {
   final uri = Uri.parse(
-    'https://baa8-121-188-29-7.ngrok-free.app/ingredients'
-        '?user_id=${Uri.encodeComponent(userId)}'
-        '&expire_within=$days',
+    'https://a4a5-121-188-29-7.ngrok-free.app/ingredients'
+    '?user_id=${Uri.encodeComponent(userId)}'
+    '&expire_within=$days',
   );
   final res = await http.get(uri, headers: {
     'Accept': 'application/json',
@@ -83,6 +83,7 @@ Future<String> fetchExpireNotice(String userId, int days) async {
     throw Exception('만료 알림 불러오기 실패 (${res.statusCode})');
   }
 }
+
 /// 오늘의 메뉴를 RecipeModel 로 가져오는 함수
 Future<RecipeModel> fetchTodayRecipe(String userId) async {
   final list = await fetchUserRecipes(userId); // RecipePage 에서 쓰던 함수
@@ -116,7 +117,6 @@ class _HomePageState extends State<HomePage> {
     _menuFuture = DataService.getTodayMenu();
     _todayFuture = fetchTodayRecipe(widget.userId);
   }
-
 
   // SharedPreferences에서 구매할 리스트 불러오기
   Future<void> _loadToBuy() async {
@@ -244,7 +244,6 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-
                     // 네비 버튼
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -282,12 +281,10 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 32),
 
-
                     // ─── 공지사항 영역 ───
                     IntrinsicHeight(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
-
                         children: [
                           // 공지사항
                           Expanded(
@@ -311,41 +308,36 @@ class _HomePageState extends State<HomePage> {
                                     return Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children: snap.data!
-                                          .asMap()
-                                          .entries
-                                          .map((e) {
+                                      children:
+                                          snap.data!.asMap().entries.map((e) {
                                         final p = e.value;
                                         return Column(
-                                          crossAxisAlignment: CrossAxisAlignment
-                                              .start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             GestureDetector(
-                                              onTap: () =>
-                                                  Navigator.push(
-                                                    ctx,
-                                                    MaterialPageRoute(
-                                                        builder: (_) =>
-                                                            NoticeBoard(
-                                                                noticeId: p
-                                                                    .id)),
-                                                  ),
+                                              onTap: () => Navigator.push(
+                                                ctx,
+                                                MaterialPageRoute(
+                                                    builder: (_) => NoticeBoard(
+                                                        noticeId: p.id)),
+                                              ),
                                               child: Padding(
-                                                padding: const EdgeInsets
-                                                    .symmetric(vertical: 4.0),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 4.0),
                                                 child: Text(p.title,
                                                     style: const TextStyle(
-                                                        decoration: TextDecoration
-                                                            .none, color: Colors
-                                                        .black)),
+                                                        decoration:
+                                                            TextDecoration.none,
+                                                        color: Colors.black)),
                                               ),
                                             ),
-                                            if (e.key < snap.data!.length -
-                                                1) const Divider(height: 1),
+                                            if (e.key < snap.data!.length - 1)
+                                              const Divider(height: 1),
                                           ],
                                         );
-                                      })
-                                          .toList(),
+                                      }).toList(),
                                     );
                                   },
                                 ),
@@ -359,7 +351,8 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 const Text(
                                   '오늘의 메뉴',
-                                  style: TextStyle(fontSize: 18,
+                                  style: TextStyle(
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 8),
@@ -384,10 +377,9 @@ class _HomePageState extends State<HomePage> {
                                               MaterialPageRoute(
                                                 builder: (_) =>
                                                     DetailedRecipePage(
-                                                      imageUrls: today
-                                                          .stepImages,
-                                                      steps: today.stepDetails,
-                                                    ),
+                                                  imageUrls: today.stepImages,
+                                                  steps: today.stepDetails,
+                                                ),
                                               ),
                                             );
                                           },
@@ -396,14 +388,15 @@ class _HomePageState extends State<HomePage> {
                                             height: 100,
                                             decoration: BoxDecoration(
                                               color: Colors.grey.shade200,
-                                              borderRadius: BorderRadius
-                                                  .circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                             child: Image.network(
                                               today.imageUrl,
                                               fit: BoxFit.cover,
                                               errorBuilder: (_, __, ___) =>
-                                              const Icon(Icons.broken_image),
+                                                  const Icon(
+                                                      Icons.broken_image),
                                             ),
                                           ),
                                         ),

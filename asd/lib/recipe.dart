@@ -9,7 +9,7 @@ import 'detailed_recipe.dart';
 /// 추천 레시피 가져오기 (userId 로 3개)
 Future<List<RecipeModel>> fetchUserRecipes(String userId) async {
   final uri = Uri.parse(
-    'https://baa8-121-188-29-7.ngrok-free.app/recipes/recommend/advanced/top3'
+    'https://a4a5-121-188-29-7.ngrok-free.app/recipes/recommend/advanced/top3'
     '?user_id=${Uri.encodeComponent(userId)}',
   );
   final response = await http.get(uri);
@@ -72,7 +72,7 @@ class _RecipePageState extends State<RecipePage> {
     }
 
     final uri = Uri.parse(
-      'https://baa8-121-188-29-7.ngrok-free.app/recipes/search'
+      'https://a4a5-121-188-29-7.ngrok-free.app/recipes/search'
       '?keyword=${Uri.encodeComponent(keyword)}',
     );
 

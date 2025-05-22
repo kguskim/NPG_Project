@@ -18,7 +18,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> registerUser() async {
     final url = Uri.parse(
-        'https://baa8-121-188-29-7.ngrok-free.app/users/register'); // 여기를 실제 서버 주소로 변경하세요
+        'https://a4a5-121-188-29-7.ngrok-free.app/users/register'); // 여기를 실제 서버 주소로 변경하세요
 
     final response = await http.post(
       url,
