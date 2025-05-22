@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yolo/home.dart';
-import 'package:yolo/manage.dart';  // fridgeLayouts 사용
+import 'package:yolo/manage.dart'; // fridgeLayouts 사용
 import 'package:http/http.dart' as http;
 
 class InsertPage extends StatefulWidget {
@@ -25,9 +25,7 @@ class InsertPage extends StatefulWidget {
 }
 
 class InsertPageState extends State<InsertPage> {
-  // --- State 필드 선언 ---
-
-  // 드롭다운 카테고리 목록
+  // 1) 카테고리 목록
   final List<String> categories = [
     '감자류','견과종실류','곡류','과일류','난류','당류','두류','버섯류','어패류',
     '유제품','유지류','육류','음료류','조리가공식품류','조미료류','주류','차류',
@@ -35,23 +33,30 @@ class InsertPageState extends State<InsertPage> {
   ];
 
   late String _selectedCategory;
+  late String _selectedFridgeName;
   late String _selectedLocation;
 
+  // 2) 날짜 & 컨트롤러
   DateTime _purchaseDate = DateTime.now();
   DateTime _expiryDate   = DateTime.now();
+  late TextEditingController _purchaseDateCtrl;
+  late TextEditingController _expiryDateCtrl;
 
-  // 텍스트 컨트롤러
+  // 3) 기타 텍스트 컨트롤러
   late TextEditingController _nameController;
   late TextEditingController _quantityController;
   late TextEditingController _typeController;    // 분류된 이름
   late TextEditingController _memoController;
 
-  late String _selectedFridgeName;
-
   @override
   void initState() {
     super.initState();
-    // 컨트롤러 초기화
+
+    // 날짜 컨트롤러 초기화 (오늘 날짜)
+    _purchaseDateCtrl = TextEditingController(text: _formatDate(_purchaseDate));
+    _expiryDateCtrl   = TextEditingController(text: _formatDate(_expiryDate));
+
+    // 기타 컨트롤러 초기값
     _nameController     = TextEditingController(text: widget.data);
     _quantityController = TextEditingController(text: '1');
     _typeController     = TextEditingController(text: widget.data);
@@ -59,12 +64,12 @@ class InsertPageState extends State<InsertPage> {
 
     _selectedCategory = categories.first;
 
+    // 마지막 선택 냉장고 & 위치 불러오기
     _loadLastFridge();
   }
 
   Future<void> _loadLastFridge() async {
     final prefs = await SharedPreferences.getInstance();
-    // private 상수 대신 문자열 리터럴 사용
     final fridgeName = prefs.getString('last_selected_fridge')
       ?? fridgeLayouts.keys.first;
     setState(() {
@@ -76,12 +81,18 @@ class InsertPageState extends State<InsertPage> {
 
   @override
   void dispose() {
+    _purchaseDateCtrl.dispose();
+    _expiryDateCtrl.dispose();
     _nameController.dispose();
     _quantityController.dispose();
     _typeController.dispose();
     _memoController.dispose();
     super.dispose();
   }
+
+  // 날짜 → 문자열 변환 헬퍼
+  String _formatDate(DateTime d) =>
+    '${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -130,14 +141,14 @@ class InsertPageState extends State<InsertPage> {
             ),
             const SizedBox(height: 10),
 
-            // 5) 날짜 선택
+            // 5) 날짜 선택 (구매일자 / 소비일자)
             Row(
               children: [
-                Expanded(child: _buildDateField(context, '구매일자', _purchaseDate, (d) {
+                Expanded(child: _buildDateField('구매일자', _purchaseDateCtrl, _purchaseDate, (d){
                   setState(() => _purchaseDate = d);
                 })),
                 const SizedBox(width: 10),
-                Expanded(child: _buildDateField(context, '소비일자', _expiryDate, (d) {
+                Expanded(child: _buildDateField('소비일자', _expiryDateCtrl, _expiryDate, (d){
                   setState(() => _expiryDate = d);
                 })),
               ],
@@ -184,7 +195,6 @@ class InsertPageState extends State<InsertPage> {
     );
   }
 
-  /// 라벨 + 텍스트필드
   Widget _buildLabeledField(String label, TextEditingController ctrl, {bool isNumber = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,7 +210,6 @@ class InsertPageState extends State<InsertPage> {
     );
   }
 
-  /// 라벨 + 드롭다운
   Widget _buildDropdown(
     String label,
     List<String> items,
@@ -222,43 +231,45 @@ class InsertPageState extends State<InsertPage> {
     );
   }
 
-  /// 라벨 + 날짜 선택 필드
   Widget _buildDateField(
-    BuildContext ctx,
     String label,
+    TextEditingController ctrl,
     DateTime date,
     ValueChanged<DateTime> onDatePicked,
   ) {
-    final text = '${date.year}-${date.month.toString().padLeft(2,'0')}-${date.day.toString().padLeft(2,'0')}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label),
         const SizedBox(height: 5),
         TextFormField(
+          controller: ctrl,
           readOnly: true,
-          initialValue: text,
           decoration: const InputDecoration(border: OutlineInputBorder()),
           onTap: () async {
             final picked = await showDatePicker(
-              context: ctx,
+              context: context,
               initialDate: date,
               firstDate: DateTime(2020),
               lastDate: DateTime(2030),
             );
-            if (picked != null) onDatePicked(picked);
+            if (picked != null) {
+              setState(() {
+                onDatePicked(picked);
+                ctrl.text = _formatDate(picked);
+              });
+            }
           },
         ),
       ],
     );
   }
 
-  /// 등록 처리
   Future<void> _onSubmit() async {
     // fridge_id, area_id 계산
     final fridgeId = fridges.indexOf(_selectedFridgeName);
-    final locations = fridgeLayouts[_selectedFridgeName]!.keys.toList();
-    final areaId   = locations.indexOf(_selectedLocation) + 1;
+    final locs     = fridgeLayouts[_selectedFridgeName]!.keys.toList();
+    final areaId   = locs.indexOf(_selectedLocation) + 1;
 
     final imageUrl = await _uploadImage(File(widget.imagePath));
     if (imageUrl == null) {
@@ -268,20 +279,19 @@ class InsertPageState extends State<InsertPage> {
 
     final data = {
       "user_id": widget.userId,
-      "ingredient_name": _typeController.text, // 분류된 이름
+      "ingredient_name": _typeController.text,
       "quantity": int.parse(_quantityController.text),
-      "purchase_date": textDate(_purchaseDate),
-      "expiration_date": textDate(_expiryDate),
-      "alias": _nameController.text, // 실제 이름
+      "purchase_date": _formatDate(_purchaseDate),
+      "expiration_date": _formatDate(_expiryDate),
+      "alias": _nameController.text,
       "area_id": areaId,
       "image": imageUrl,
       "note": _memoController.text,
       "fridge_id": fridgeId,
     };
 
-    final uri = Uri.parse("https://a4a5-121-188-29-7.ngrok-free.app/ingredients");
     final resp = await http.post(
-      uri,
+      Uri.parse("https://a4a5-121-188-29-7.ngrok-free.app/ingredients"),
       headers: {"Content-Type": "application/json"},
       body: json.encode(data),
     );
@@ -295,8 +305,10 @@ class InsertPageState extends State<InsertPage> {
   }
 
   Future<String?> _uploadImage(File file) async {
-    final uri = Uri.parse("https://a4a5-121-188-29-7.ngrok-free.app/upload-image");
-    final req = http.MultipartRequest('POST', uri);
+    final req = http.MultipartRequest(
+      'POST',
+      Uri.parse("https://a4a5-121-188-29-7.ngrok-free.app/upload-image"),
+    );
     req.files.add(await http.MultipartFile.fromPath('file', file.path));
     final res = await req.send();
     if (res.statusCode == 200) {
@@ -305,7 +317,4 @@ class InsertPageState extends State<InsertPage> {
     }
     return null;
   }
-
-  String textDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}';
 }
