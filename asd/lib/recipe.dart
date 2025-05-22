@@ -5,11 +5,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'models/recipe_model.dart';
 import 'detailed_recipe.dart';
+import 'package:yolo/config/constants.dart';
 
 /// 추천 레시피 가져오기 (userId 로 3개)
 Future<List<RecipeModel>> fetchUserRecipes(String userId) async {
   final uri = Uri.parse(
-    'https://a4a5-121-188-29-7.ngrok-free.app/recipes/recommend/advanced/top3'
+    '${ApiConfig.baseUrl}/recipes/recommend/advanced/top3'
     '?user_id=${Uri.encodeComponent(userId)}',
   );
   final response = await http.get(uri);
@@ -72,7 +73,7 @@ class _RecipePageState extends State<RecipePage> {
     }
 
     final uri = Uri.parse(
-      'https://a4a5-121-188-29-7.ngrok-free.app/recipes/search'
+      '${ApiConfig.baseUrl}/recipes/search'
       '?keyword=${Uri.encodeComponent(keyword)}',
     );
 

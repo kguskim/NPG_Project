@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:yolo/login_page.dart';
+import 'package:yolo/config/constants.dart';
 
 /// SharedPreferences에 저장된 마지막 선택된 냉장고 이름 키
 const _kLastSelectedFridgeKey = 'last_selected_fridge';
@@ -176,7 +177,7 @@ class _ManagePageState extends State<ManagePage> {
     required String compartment,
   }) async {
     final uri = Uri.parse(
-      'https://a4a5-121-188-29-7.ngrok-free.app/ingredients?user_id=${widget.userId}',
+      '${ApiConfig.baseUrl}/ingredients?user_id=${widget.userId}',
     );
     final response = await http.get(uri);
     if (response.statusCode == 200) {
@@ -188,7 +189,7 @@ class _ManagePageState extends State<ManagePage> {
 
   Future<void> _deleteItem(String id) async {
     final uri = Uri.parse(
-      'https://a4a5-121-188-29-7.ngrok-free.app/ingredients/$id',
+      '${ApiConfig.baseUrl}/ingredients/$id',
     );
     final response = await http.delete(uri);
     if (response.statusCode == 200) {
@@ -198,7 +199,7 @@ class _ManagePageState extends State<ManagePage> {
 
   Widget _buildImage(String imageUrl) {
     // 만약 imageUrl이 상대 경로로 오면, 전체 URL로 변환
-    const baseUrl = 'https://a4a5-121-188-29-7.ngrok-free.app';
+    const baseUrl = '${ApiConfig.baseUrl}';
 
     final fullUrl = imageUrl.startsWith('http')
         ? imageUrl
@@ -482,7 +483,7 @@ class _ManagePageState extends State<ManagePage> {
   Future<void> _updateItemOnServer(
       FridgeItem item, Map<String, dynamic> data) async {
     final uri = Uri.parse(
-        'https://a4a5-121-188-29-7.ngrok-free.app/ingredients/${item.ingredient_id}');
+        '${ApiConfig.baseUrl}/ingredients/${item.ingredient_id}');
     final res = await http.put(
       uri,
       headers: {'Content-Type': 'application/json'},

@@ -15,6 +15,7 @@ import 'models/recipe_model.dart'; // <-- RecipeModel 을 재사용
 import 'widgets/to_buy_section.dart';
 import 'models/today_recipe_model.dart';
 import 'today_detailed_recipe.dart';
+import 'package:yolo/config/constants.dart';
 
 /// 공지사항 모델
 class Post {
@@ -61,7 +62,7 @@ class DataService {
 /// 만료 알림을 가져오는 API 호출 함수
 Future<String> fetchExpireNotice(String userId, int days) async {
   final uri = Uri.parse(
-    'https://a4a5-121-188-29-7.ngrok-free.app/ingredients'
+    '${ApiConfig.baseUrl}/ingredients'
     '?user_id=${Uri.encodeComponent(userId)}'
     '&expire_within=$days',
   );

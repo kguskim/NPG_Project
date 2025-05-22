@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'home.dart';
 import 'register_page.dart';
+import 'package:yolo/config/constants.dart';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController controller = TextEditingController();
@@ -15,7 +16,7 @@ class LoginPage extends StatelessWidget {
 
     try {
       final url = Uri.parse(
-          'https://a4a5-121-188-29-7.ngrok-free.app/users/login'); // 실제 주소로 바꿔주세요
+          '${ApiConfig.baseUrl}/users/login'); // 실제 주소로 바꿔주세요
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

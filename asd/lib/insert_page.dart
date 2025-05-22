@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yolo/home.dart';
 import 'package:yolo/manage.dart'; // fridgeLayouts 사용
 import 'package:http/http.dart' as http;
+import 'package:yolo/config/constants.dart';
 
 class InsertPage extends StatefulWidget {
   final String userId;
@@ -291,7 +292,7 @@ class InsertPageState extends State<InsertPage> {
     };
 
     final resp = await http.post(
-      Uri.parse("https://a4a5-121-188-29-7.ngrok-free.app/ingredients"),
+      Uri.parse("${ApiConfig.baseUrl}/ingredients"),
       headers: {"Content-Type": "application/json"},
       body: json.encode(data),
     );
@@ -307,7 +308,7 @@ class InsertPageState extends State<InsertPage> {
   Future<String?> _uploadImage(File file) async {
     final req = http.MultipartRequest(
       'POST',
-      Uri.parse("https://a4a5-121-188-29-7.ngrok-free.app/upload-image"),
+      Uri.parse("${ApiConfig.baseUrl}/upload-image"),
     );
     req.files.add(await http.MultipartFile.fromPath('file', file.path));
     final res = await req.send();
