@@ -59,22 +59,33 @@ class FridgeItem {
   final String imageUrl;
   final int fridge_id;
   final int area_id;
+  final String alias;
+  final int quantity;
+  final String purchase_date;
+  final String expiration_date;
 
   FridgeItem(
       {required this.user_id,
       required this.imageUrl,
       required this.ingredient_id,
       required this.fridge_id,
-      required this.area_id});
+      required this.area_id,
+      required this.alias,
+      required this.quantity,
+      required this.expiration_date,
+      required this.purchase_date});
 
   factory FridgeItem.fromJson(Map<String, dynamic> json) {
     return FridgeItem(
-      user_id: json['user_id'].toString(),
-      ingredient_id: json['ingredient_id'],
-      imageUrl: json['image'],
-      fridge_id: json['fridge_id'],
-      area_id: json['area_id'],
-    );
+        user_id: json['user_id'].toString(),
+        ingredient_id: json['ingredient_id'],
+        imageUrl: json['image'],
+        fridge_id: json['fridge_id'],
+        area_id: json['area_id'],
+        alias: json['alias'],
+        quantity: json['quantity'],
+        expiration_date: json['expiration_date'],
+        purchase_date: json['purchase_date']);
   }
 
   FridgeItem copyWith({
@@ -83,12 +94,15 @@ class FridgeItem {
     int? ingredient_id,
   }) {
     return FridgeItem(
-      user_id: id ?? this.user_id,
-      imageUrl: imageUrl ?? this.imageUrl,
-      ingredient_id: ingredient_id ?? this.ingredient_id,
-      fridge_id: fridge_id ?? this.fridge_id,
-      area_id: area_id ?? this.area_id,
-    );
+        user_id: id ?? this.user_id,
+        imageUrl: imageUrl ?? this.imageUrl,
+        ingredient_id: ingredient_id ?? this.ingredient_id,
+        fridge_id: fridge_id ?? this.fridge_id,
+        area_id: area_id ?? this.area_id,
+        alias: alias ?? this.alias,
+        quantity: quantity ?? this.quantity,
+        expiration_date: expiration_date ?? this.expiration_date,
+        purchase_date: purchase_date ?? this.purchase_date);
   }
 }
 
@@ -209,7 +223,7 @@ class _ManagePageState extends State<ManagePage> {
     final filteredItems = items.where((item) {
       final itemFridgeName = fridgeIdToName[item.fridge_id];
       return itemFridgeName == _selectedFridge &&
-          item.area_id == _currentCompartment;
+          item.area_id == _currentCompartment + 1;
     }).toList();
 
     return LayoutBuilder(
@@ -375,15 +389,14 @@ class _ManagePageState extends State<ManagePage> {
   /// 선택된 식재료 정보 수정/삭제 다이얼로그
   void _showItemDetailDialog(FridgeItem item) {
     final aliasCtrl =
-        TextEditingController(text: item.ingredient_id.toString());
+        TextEditingController(text: utf8.decode(item.alias.codeUnits));
     final nameCtrl = TextEditingController(text: item.user_id);
-    final qtyCtrl = TextEditingController(text: '1');
+    final qtyCtrl = TextEditingController(text: item.quantity.toString());
     final categoryCtrl = TextEditingController(text: '');
-    final boughtCtrl = TextEditingController(
-        text: DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    final boughtCtrl =
+        TextEditingController(text: utf8.decode(item.purchase_date.codeUnits));
     final expireCtrl = TextEditingController(
-        text: DateFormat('yyyy-MM-dd')
-            .format(DateTime.now().add(Duration(days: 7))));
+        text: utf8.decode(item.expiration_date.codeUnits));
     final memoCtrl = TextEditingController(text: '');
     final areaCtrl = TextEditingController(text: '');
 
@@ -402,17 +415,11 @@ class _ManagePageState extends State<ManagePage> {
               const SizedBox(height: 12),
               TextFormField(
                   controller: aliasCtrl,
-                  decoration: const InputDecoration(labelText: 'Alias')),
-              TextFormField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: '식재료 명')),
+                  decoration: const InputDecoration(labelText: '식재료명')),
               TextFormField(
                   controller: qtyCtrl,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: '수량')),
-              TextFormField(
-                  controller: categoryCtrl,
-                  decoration: const InputDecoration(labelText: '카테고리')),
               TextFormField(
                   controller: boughtCtrl,
                   decoration:
@@ -425,9 +432,6 @@ class _ManagePageState extends State<ManagePage> {
                   controller: memoCtrl,
                   decoration: const InputDecoration(labelText: '메모'),
                   maxLines: 2),
-              TextFormField(
-                  controller: areaCtrl,
-                  decoration: const InputDecoration(labelText: 'Area ID')),
             ],
           ),
         ),
