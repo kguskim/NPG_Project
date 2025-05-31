@@ -271,20 +271,19 @@ class _ManagePageState extends State<ManagePage> {
               ),
               padding: const EdgeInsets.all(6),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: group.map((item) {
-                  return GestureDetector(
-                    onTap: () => _showItemDetailDialog(item),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: 80, // 고정 너비
-                      height: 80, // 고정 높이 (정사각형)
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: _buildImage(item.imageUrl),
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: AspectRatio(
+                        aspectRatio: 1, // 너비 = 높이 비율(정사각형)
+                        child: GestureDetector(
+                          onTap: () => _showItemDetailDialog(item),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: _buildImage(item.imageUrl),
+                          ),
+                        ),
                       ),
                     ),
                   );
