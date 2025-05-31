@@ -1,4 +1,4 @@
 // lib/config/constants.dart
 class ApiConfig {
-  static const String baseUrl = 'https://wish-limits-cocktail-eleven.trycloudflare.com';
+  static const String baseUrl = 'https://wines-once-communicate-factors.trycloudflare.com';
 }
