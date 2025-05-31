@@ -11,7 +11,6 @@ import 'package:yolo/notice_page.dart';
 import 'package:yolo/recipe.dart';
 import 'package:http/http.dart' as http;
 import 'package:yolo/detailed_recipe.dart';
-import 'models/recipe_model.dart'; // <-- RecipeModel 을 재사용
 import 'widgets/to_buy_section.dart';
 import 'models/today_recipe_model.dart';
 import 'today_detailed_recipe.dart';
@@ -85,11 +84,29 @@ Future<String> fetchExpireNotice(String userId, int days) async {
   }
 }
 
-/// 오늘의 메뉴를 RecipeModel 로 가져오는 함수
-Future<RecipeModel> fetchTodayRecipe(String userId) async {
-  final list = await fetchUserRecipes(userId); // RecipePage 에서 쓰던 함수
-  if (list.isEmpty) throw Exception('오늘의 메뉴가 없습니다');
-  return list.first; // 가장 첫 번째 레시피를 오늘의 메뉴로 사용
+/// 오늘의 메뉴를 TodayRecipeModel 로 가져오는 함수
+Future<TodayRecipeModel> fetchTodayRecipe(String userId) async {
+  //  URL 구성: baseUrl + '/recipes/recommend/today' + userId 쿼리 파라미터
+  final uri = Uri.parse('${ApiConfig.baseUrl}/recipes/recommend/today');
+  // 2) GET 요청 보내기
+   final response = await http.get(
+     uri,
+     headers: {
+       'Content-Type': 'application/json',
+       // 필요하다면 Authorization 등 헤더 추가
+     },
+   );
+  // 3) 응답 상태 코드 확인
+   if (response.statusCode == 200) {
+     // 4) 응답 본문을 JSON 파싱 후 TodayRecipeModel 생성
+     final Map<String, dynamic> jsonMap = jsonDecode(utf8.decode(response.bodyBytes));
+     return TodayRecipeModel.fromJson(jsonMap);
+   } else {
+     // 에러가 났다면 예외 던지기
+     throw Exception('오늘의 메뉴를 불러오는 데 실패했습니다 (status: ${response.statusCode})');
+   }
+
+
 }
 
 class HomePage extends StatefulWidget {
@@ -103,7 +120,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
-  late Future<RecipeModel> _todayFuture;
+  late Future<TodayRecipeModel> _todayFuture;
   late Future<String> _noticeFuture;
   late Future<Menu> _menuFuture;
   List<String> _toBuy = [];
@@ -357,7 +374,7 @@ class _HomePageState extends State<HomePage> {
                                       fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 8),
-                                FutureBuilder<RecipeModel>(
+                                FutureBuilder<TodayRecipeModel>(
                                   future: _todayFuture,
                                   builder: (ctx, snap) {
                                     if (snap.connectionState ==
