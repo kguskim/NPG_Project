@@ -11,7 +11,7 @@ import 'package:yolo/config/constants.dart';
 
 class InsertPage extends StatefulWidget {
   final String userId;
-  final String data;      // OCR로 인식된 이름
+  final String data; // OCR로 인식된 이름
   final String imagePath; // 카메라 촬영된 파일 경로
 
   const InsertPage({
@@ -28,9 +28,26 @@ class InsertPage extends StatefulWidget {
 class InsertPageState extends State<InsertPage> {
   // 1) 카테고리 목록
   final List<String> categories = [
-    '감자류','견과종실류','곡류','과일류','난류','당류','두류','버섯류','어패류',
-    '유제품','유지류','육류','음료류','조리가공식품류','조미료류','주류','차류',
-    '채소류','해조류','기타',
+    '감자류',
+    '견과종실류',
+    '곡류',
+    '과일류',
+    '난류',
+    '당류',
+    '두류',
+    '버섯류',
+    '어패류',
+    '유제품',
+    '유지류',
+    '육류',
+    '음료류',
+    '조리가공식품류',
+    '조미료류',
+    '주류',
+    '차류',
+    '채소류',
+    '해조류',
+    '기타',
   ];
 
   late String _selectedCategory;
@@ -39,14 +56,14 @@ class InsertPageState extends State<InsertPage> {
 
   // 2) 날짜 & 컨트롤러
   DateTime _purchaseDate = DateTime.now();
-  DateTime _expiryDate   = DateTime.now();
+  DateTime _expiryDate = DateTime.now();
   late TextEditingController _purchaseDateCtrl;
   late TextEditingController _expiryDateCtrl;
 
   // 3) 기타 텍스트 컨트롤러
   late TextEditingController _nameController;
   late TextEditingController _quantityController;
-  late TextEditingController _typeController;    // 분류된 이름
+  late TextEditingController _typeController; // 분류된 이름
   late TextEditingController _memoController;
 
   @override
@@ -55,13 +72,13 @@ class InsertPageState extends State<InsertPage> {
 
     // 날짜 컨트롤러 초기화 (오늘 날짜)
     _purchaseDateCtrl = TextEditingController(text: _formatDate(_purchaseDate));
-    _expiryDateCtrl   = TextEditingController(text: _formatDate(_expiryDate));
+    _expiryDateCtrl = TextEditingController(text: _formatDate(_expiryDate));
 
     // 기타 컨트롤러 초기값
-    _nameController     = TextEditingController(text: widget.data);
+    _nameController = TextEditingController(text: widget.data);
     _quantityController = TextEditingController(text: '1');
-    _typeController     = TextEditingController(text: widget.data);
-    _memoController     = TextEditingController();
+    _typeController = TextEditingController(text: widget.data);
+    _memoController = TextEditingController();
 
     _selectedCategory = categories.first;
 
@@ -71,8 +88,8 @@ class InsertPageState extends State<InsertPage> {
 
   Future<void> _loadLastFridge() async {
     final prefs = await SharedPreferences.getInstance();
-    final fridgeName = prefs.getString('last_selected_fridge')
-      ?? fridgeLayouts.keys.first;
+    final fridgeName =
+        prefs.getString('last_selected_fridge') ?? fridgeLayouts.keys.first;
     setState(() {
       _selectedFridgeName = fridgeName;
       final locs = fridgeLayouts[_selectedFridgeName]!.keys.toList();
@@ -93,7 +110,7 @@ class InsertPageState extends State<InsertPage> {
 
   // 날짜 → 문자열 변환 헬퍼
   String _formatDate(DateTime d) =>
-    '${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}';
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +136,9 @@ class InsertPageState extends State<InsertPage> {
               children: [
                 Expanded(child: _buildLabeledField('식재료명', _nameController)),
                 const SizedBox(width: 10),
-                Expanded(child: _buildLabeledField('수량', _quantityController, isNumber: true)),
+                Expanded(
+                    child: _buildLabeledField('수량', _quantityController,
+                        isNumber: true)),
               ],
             ),
             const SizedBox(height: 10),
@@ -128,28 +147,25 @@ class InsertPageState extends State<InsertPage> {
             _buildLabeledField('분류', _typeController),
             const SizedBox(height: 10),
 
-            // 4) 카테고리 & 배치영역 드롭다운
-            Row(
-              children: [
-                Expanded(child: _buildDropdown('카테고리', categories, _selectedCategory, (v) {
-                  if (v != null) setState(() => _selectedCategory = v);
-                })),
-                const SizedBox(width: 10),
-                Expanded(child: _buildDropdown('배치영역', locations, _selectedLocation, (v) {
-                  if (v != null) setState(() => _selectedLocation = v);
-                })),
-              ],
-            ),
+            Expanded(
+                child:
+                    _buildDropdown('배치영역', locations, _selectedLocation, (v) {
+              if (v != null) setState(() => _selectedLocation = v);
+            })),
             const SizedBox(height: 10),
 
             // 5) 날짜 선택 (구매일자 / 소비일자)
             Row(
               children: [
-                Expanded(child: _buildDateField('구매일자', _purchaseDateCtrl, _purchaseDate, (d){
+                Expanded(
+                    child: _buildDateField(
+                        '구매일자', _purchaseDateCtrl, _purchaseDate, (d) {
                   setState(() => _purchaseDate = d);
                 })),
                 const SizedBox(width: 10),
-                Expanded(child: _buildDateField('소비일자', _expiryDateCtrl, _expiryDate, (d){
+                Expanded(
+                    child: _buildDateField('소비일자', _expiryDateCtrl, _expiryDate,
+                        (d) {
                   setState(() => _expiryDate = d);
                 })),
               ],
@@ -157,7 +173,8 @@ class InsertPageState extends State<InsertPage> {
             const SizedBox(height: 10),
 
             // 6) 메모
-            const Text('메모', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text('메모',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             TextField(
               controller: _memoController,
@@ -174,7 +191,8 @@ class InsertPageState extends State<InsertPage> {
               onPressed: _onSubmit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.lightBlueAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: const Text('등록', style: TextStyle(fontSize: 16)),
@@ -188,7 +206,8 @@ class InsertPageState extends State<InsertPage> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => HomePage(userId: widget.userId)),
+              MaterialPageRoute(
+                  builder: (_) => HomePage(userId: widget.userId)),
             );
           },
         ),
@@ -196,7 +215,8 @@ class InsertPageState extends State<InsertPage> {
     );
   }
 
-  Widget _buildLabeledField(String label, TextEditingController ctrl, {bool isNumber = false}) {
+  Widget _buildLabeledField(String label, TextEditingController ctrl,
+      {bool isNumber = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -224,7 +244,9 @@ class InsertPageState extends State<InsertPage> {
         const SizedBox(height: 5),
         DropdownButtonFormField<String>(
           value: value,
-          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+          items: items
+              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+              .toList(),
           onChanged: onChanged,
           decoration: const InputDecoration(border: OutlineInputBorder()),
         ),
@@ -269,12 +291,13 @@ class InsertPageState extends State<InsertPage> {
   Future<void> _onSubmit() async {
     // fridge_id, area_id 계산
     final fridgeId = fridges.indexOf(_selectedFridgeName);
-    final locs     = fridgeLayouts[_selectedFridgeName]!.keys.toList();
-    final areaId   = locs.indexOf(_selectedLocation) + 1;
+    final locs = fridgeLayouts[_selectedFridgeName]!.keys.toList();
+    final areaId = locs.indexOf(_selectedLocation) + 1;
 
     final imageUrl = await _uploadImage(File(widget.imagePath));
     if (imageUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('이미지 업로드 실패')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('이미지 업로드 실패')));
       return;
     }
 
@@ -297,11 +320,13 @@ class InsertPageState extends State<InsertPage> {
       body: json.encode(data),
     );
     if (resp.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('등록 성공')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('등록 성공')));
       await Future.delayed(const Duration(milliseconds: 500));
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('등록 실패: ${resp.body}')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('등록 실패: ${resp.body}')));
     }
   }
 
