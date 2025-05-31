@@ -45,6 +45,8 @@ class _RecipePageState extends State<RecipePage> {
 
   // 추천 레시피 Future
   late final Future<List<RecipeModel>> _recipesFuture;
+  // 디바운스 관련 변수
+  Timer? _debounce;
 
   @override
   void initState() {
