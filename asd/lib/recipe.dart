@@ -10,7 +10,7 @@ import 'package:yolo/config/constants.dart';
 /// 추천 레시피 가져오기 (userId 로 3개)
 Future<List<RecipeModel>> fetchUserRecipes(String userId) async {
   final uri = Uri.parse(
-    '${ApiConfig.baseUrl}/recipes/recommend/advanced/top3'
+    '${ApiConfig.baseUrl}/recipes/recommend/priority/top3'
     '?user_id=${Uri.encodeComponent(userId)}',
   );
   final response = await http.get(uri);
