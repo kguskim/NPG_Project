@@ -1,5 +1,5 @@
 // lib/config/constants.dart
 class ApiConfig {
   static const String baseUrl =
-      'https://y-owned-emperor-projector.trycloudflare.com';
+      'https://crucial-const-supported-worlds.trycloudflare.com';
 }
