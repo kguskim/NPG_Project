@@ -46,7 +46,6 @@ class _RecipePageState extends State<RecipePage> {
   // 추천 레시피 Future
   late final Future<List<RecipeModel>> _recipesFuture;
 
-
   @override
   void initState() {
     super.initState();
@@ -74,27 +73,26 @@ class _RecipePageState extends State<RecipePage> {
     }
 
     final uri = Uri.parse(
-      '${ApiConfig.baseUrl}/recipes/search'
-      '?keyword=${Uri.encodeComponent(keyword)}',
+      '${ApiConfig.baseUrl}/recipes/search?keyword=${Uri.encodeComponent(keyword)}',
     );
 
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        final List data = jsonDecode(utf8.decode(response.bodyBytes));
-        setState(() {
-          _searchResults = data
-              .map((e) => RecipeModel.fromJson(e as Map<String, dynamic>))
-              .toList();
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('검색 실패: ${response.statusCode}')),
-        );
-      }
-    } catch (e) {
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        // 필요하다면 Authorization 등 헤더 추가
+      },
+    );
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(utf8.decode(response.bodyBytes));
+      setState(() {
+        _searchResults = data
+            .map((e) => RecipeModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      });
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('검색 중 오류가 발생했습니다.')),
+        SnackBar(content: Text('검색 실패: ${response.statusCode}')),
       );
     }
   }
