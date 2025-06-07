@@ -12,7 +12,7 @@ class DetailedRecipePage extends StatelessWidget {
   final List<String> steps;
 
   /// 교차해서 보여줄 쌍의 개수 (여기서는 3쌍)
-  static const int _pairCount = 3;
+ /// static const int _pairCount = 3;
 
   const DetailedRecipePage({
     Key? key,

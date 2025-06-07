@@ -19,7 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> registerUser() async {
     final url = Uri.parse(
-        '${ApiConfig.baseUrl}/users/register'); // 여기를 실제 서버 주소로 변경하세요
+        '${ApiConfig.baseUrl}/users/register'); 
 
     final response = await http.post(
       url,

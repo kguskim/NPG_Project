@@ -16,7 +16,7 @@ class LoginPage extends StatelessWidget {
 
     try {
       final url = Uri.parse(
-          '${ApiConfig.baseUrl}/users/login'); // 실제 주소로 바꿔주세요
+          '${ApiConfig.baseUrl}/users/login'); 
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

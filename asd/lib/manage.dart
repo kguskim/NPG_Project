@@ -226,7 +226,7 @@ class _ManagePageState extends State<ManagePage> {
     const spacing = 12.0;
     const borderWidth = 3.0;
 
-    // ✅ 현재 냉장고와 현재 섹션(area)에 해당하는 아이템만 필터링
+    //  현재 냉장고와 현재 섹션(area)에 해당하는 아이템만 필터링
     final filteredItems = items.where((item) {
       final itemFridgeName = fridgeIdToName[item.fridge_id];
       return itemFridgeName == _selectedFridge &&
