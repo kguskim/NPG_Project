@@ -1,5 +1,5 @@
 // lib/detailed_recipe.dart
-
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// 상세 레시피 페이지
@@ -12,7 +12,9 @@ class DetailedRecipePage extends StatelessWidget {
   final List<String> steps;
 
   /// 교차해서 보여줄 쌍의 개수 (여기서는 3쌍)
- /// static const int _pairCount = 3;
+  ///static const int _pairCount = 3;
+
+
 
   const DetailedRecipePage({
     Key? key,
@@ -23,7 +25,8 @@ class DetailedRecipePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 총 항목 수 = (이미지+설명) * _pairCount
-    final int itemCount = _pairCount * 2;
+    final int pairCount = min(imageUrls.length, steps.length);
+    final int itemCount = pairCount * 2;
 
     return Scaffold(
       appBar: AppBar(
