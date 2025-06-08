@@ -1,6 +1,6 @@
 /// 레시피 데이터 모델
 /// 서버 응답(JSON)과 Dart 객체 간 변환을 담당
-class RecipeModel {
+class TodayRecipeModel {
   /// 레시피 고유 ID
   final String id;
 
@@ -19,7 +19,7 @@ class RecipeModel {
   /// 단계별 설명 리스트
   final List<String> stepDetails;
 
-  RecipeModel({
+  TodayRecipeModel({
     required this.id,
     required this.imageUrl,
     required this.title,
@@ -29,14 +29,14 @@ class RecipeModel {
   });
 
   /// JSON 맵을 RecipeModel 객체로 변환
-  factory RecipeModel.fromJson(Map<String, dynamic> json) {
-    return RecipeModel(
+  factory TodayRecipeModel.fromJson(Map<String, dynamic> json) {
+    return TodayRecipeModel(
       id: json['id'],
       imageUrl: json['imageUrl'],
       title: json['title'],
       ingredients: json['ingredients'],
-      stepImages:   List<String>.from(json['stepImages']),
-      stepDetails:  List<String>.from(json['stepDetails']),
+      stepImages: List<String>.from(json['stepImages']),
+      stepDetails: List<String>.from(json['stepDetails']),
     );
   }
 }

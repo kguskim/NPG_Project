@@ -1,38 +1,56 @@
 // lib/recipe.dart
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'models/recipe_model.dart';
-import 'services/recipe_extraction.dart';
 import 'detailed_recipe.dart';
+import 'package:yolo/config/constants.dart';
 
-/// 레시피 추천 페이지 (항상 3개 순환 캐러셀 + 기존 UI 틀 유지)
+/// 추천 레시피 가져오기 (userId 로 3개)
+Future<List<RecipeModel>> fetchUserRecipes(String userId) async {
+  final uri = Uri.parse(
+    '${ApiConfig.baseUrl}/recipes/recommend/priority/top3'
+    '?user_id=${Uri.encodeComponent(userId)}',
+  );
+  final response = await http.get(uri);
+
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(utf8.decode(response.bodyBytes));
+    return data
+        .map((e) => RecipeModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  } else {
+    throw Exception('레시피를 불러오는 데 실패했습니다.');
+  }
+}
+
 class RecipePage extends StatefulWidget {
-  const RecipePage({Key? key}) : super(key: key);
+  final String userId;
+  const RecipePage({Key? key, required this.userId}) : super(key: key);
+
   @override
   _RecipePageState createState() => _RecipePageState();
 }
 
 class _RecipePageState extends State<RecipePage> {
-  // — 필터용 드롭다운 데이터
-  final List<String> _cuisines = ['양식', '일식', '한식', '중식'];
-  String _selectedCuisine = '양식';
-
-  // — 검색창 컨트롤러
+  // 검색창 컨트롤러
   final TextEditingController _searchController = TextEditingController();
+  // 검색 결과
+  List<RecipeModel> _searchResults = [];
 
-  // — PageView 컨트롤러 & 현재 인덱스
+  // 캐러셀 컨트롤러
   late final PageController _pageController;
   int _currentIndex = 0;
 
-  // — 3개 레시피를 불러올 Future
+  // 추천 레시피 Future
   late final Future<List<RecipeModel>> _recipesFuture;
 
   @override
   void initState() {
     super.initState();
-    // 초기 페이지를 1로 주어, 0번에는 마지막 아이템을 복제해서 넣습니다.
     _pageController = PageController(initialPage: 1);
-    _recipesFuture = RecipeExtraction.fetchRandomRecipes(3);
+    _recipesFuture = fetchUserRecipes(widget.userId);
   }
 
   @override
@@ -42,222 +60,284 @@ class _RecipePageState extends State<RecipePage> {
     super.dispose();
   }
 
+  /// 키워드 검색 API 호출
+  Future<void> searchByKeyword() async {
+    // 키보드 내리기
+    FocusScope.of(context).unfocus();
+
+    final keyword = _searchController.text.trim();
+    if (keyword.isEmpty) {
+      // 검색어 비우면 추천 캐러셀로 돌아가기
+      setState(() => _searchResults.clear());
+      return;
+    }
+
+    final uri = Uri.parse(
+      '${ApiConfig.baseUrl}/recipes/search?keyword=${Uri.encodeComponent(keyword)}',
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        // 필요하다면 Authorization 등 헤더 추가
+      },
+    );
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(utf8.decode(response.bodyBytes));
+      setState(() {
+        _searchResults = data
+            .map((e) => RecipeModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('검색 실패: ${response.statusCode}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 키보드 올라와도 깨지지 않도록
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: FutureBuilder<List<RecipeModel>>(
-          future: _recipesFuture,
-          builder: (ctx, snap) {
-            // 로딩 또는 에러 처리
-            if (snap.connectionState != ConnectionState.done ||
-                snap.hasError ||
-                (snap.data?.length ?? 0) < 1) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final recipes = snap.data!;      // 길이 == 3 보장
-            final itemCount = recipes.length + 2; // 앞뒤 복제 포함
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ─── 상단 바
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.of(context).maybePop(),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '레시피 추천',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF7FA9FF),
-                        ),
-                      ),
-                      const Spacer(flex: 2),
-                    ],
+        child: Column(
+          children: [
+            // ─── 상단 바 ────────────────────
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+                const Spacer(),
+                const Text(
+                  '레시피 추천',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF7FA9FF),
                   ),
-                  const SizedBox(height: 8),
+                ),
+                const Spacer(flex: 2),
+              ],
+            ),
+            // ───── 검색창 ─────────────────────────
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => searchByKeyword(),
+                decoration: InputDecoration(
+                  hintText: '레시피 키워드를 입력하세요',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: searchByKeyword,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  isDense: true,
+                ),
+              ),
+            ),
 
-                  // ─── 필터 (드롭다운 + 검색)
-                  Row(
-                    children: [
-                      DropdownButton<String>(
-                        value: _selectedCuisine,
-                        items: _cuisines
-                            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                            .toList(),
-                        onChanged: (v) {
-                          if (v != null) setState(() => _selectedCuisine = v);
-                        },
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: '검색',
-                            prefixIcon: const Icon(Icons.search),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            isDense: true,
+            // ───── 검색 결과 or 추천 캐러셀 ───────────
+            Expanded(
+              child: _searchResults.isNotEmpty
+                  // 검색 결과가 있으면 리스트로 보여줌
+                  ? ListView.builder(
+                      itemCount: _searchResults.length,
+                      itemBuilder: (ctx, i) {
+                        final r = _searchResults[i];
+                        return ListTile(
+                          leading: Image.network(
+                            r.imageUrl,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.broken_image),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                          title: Text(r.title),
+                          subtitle: Text(r.ingredients),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetailedRecipePage(
+                                imageUrls: r.stepImages,
+                                steps: r.stepDetails,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  // 검색 결과가 없으면 추천 캐러셀 보여줌
+                  : FutureBuilder<List<RecipeModel>>(
+                      future: _recipesFuture,
+                      builder: (ctx, snap) {
+                        if (snap.connectionState != ConnectionState.done ||
+                            snap.hasError ||
+                            (snap.data?.length ?? 0) < 1) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        final recipes = snap.data!;
+                        final itemCount = recipes.length + 2;
 
-                  // ─── 무한 루프 캐러셀 영역 ───
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        // PageView: [복제마지막, 0, 1, 2, 복제첫] 총 5페이지
-                        PageView.builder(
-                          controller: _pageController,
-                          itemCount: itemCount,
-                          onPageChanged: (page) {
-                            // 끝단 보정: 0→마지막 원본, 끝+1→첫 원본
-                            if (page == 0) {
-                              _pageController.jumpToPage(recipes.length);
-                              page = recipes.length;
-                            } else if (page == itemCount - 1) {
-                              _pageController.jumpToPage(1);
-                              page = 1;
-                            }
-                            // 실제 데이터 인덱스 = page - 1
-                            setState(() => _currentIndex = page - 1);
-                          },
-                          itemBuilder: (ctx, page) {
-                            // page → recipes 인덱스 매핑
-                            final int idx = (page == 0)
-                                ? recipes.length - 1
-                                : (page == itemCount - 1)
-                                ? 0
-                                : page - 1;
-                            final r = recipes[idx];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // ─── 상단 바 ────────────────────
 
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => DetailedRecipePage(
-                                      imageUrls: r.stepImages,
-                                      steps: r.stepDetails,
+                              const SizedBox(height: 8),
+
+                              // ─── 캐러셀 ─────────────────────
+                              Expanded(
+                                child: Stack(
+                                  children: [
+                                    PageView.builder(
+                                      controller: _pageController,
+                                      itemCount: itemCount,
+                                      onPageChanged: (page) {
+                                        if (page == 0) {
+                                          _pageController
+                                              .jumpToPage(recipes.length);
+                                          page = recipes.length;
+                                        } else if (page == itemCount - 1) {
+                                          _pageController.jumpToPage(1);
+                                          page = 1;
+                                        }
+                                        setState(
+                                            () => _currentIndex = page - 1);
+                                      },
+                                      itemBuilder: (ctx, page) {
+                                        final idx = page == 0
+                                            ? recipes.length - 1
+                                            : page == itemCount - 1
+                                                ? 0
+                                                : page - 1;
+                                        final r = recipes[idx];
+                                        return GestureDetector(
+                                          onTap: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  DetailedRecipePage(
+                                                imageUrls: r.stepImages,
+                                                steps: r.stepDetails,
+                                              ),
+                                            ),
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: Image.network(
+                                              r.imageUrl,
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  Container(
+                                                color: Colors.grey.shade200,
+                                                child: const Center(
+                                                  child: Icon(
+                                                    Icons.broken_image,
+                                                    size: 48,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  ),
-                                );
-                              },
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  r.imageUrl,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    color: Colors.grey.shade200,
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.broken_image,
-                                        size: 48,
-                                        color: Colors.grey,
+
+                                    // ◀️ 왼쪽 화살표
+                                    Positioned(
+                                      left: 0,
+                                      top: 0,
+                                      bottom: 0,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.chevron_left,
+                                            size: 32),
+                                        onPressed: () =>
+                                            _pageController.previousPage(
+                                          duration:
+                                              const Duration(milliseconds: 300),
+                                          curve: Curves.easeInOut,
+                                        ),
                                       ),
                                     ),
+
+                                    // ▶️ 오른쪽 화살표
+                                    Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      bottom: 0,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.chevron_right,
+                                            size: 32),
+                                        onPressed: () =>
+                                            _pageController.nextPage(
+                                          duration:
+                                              const Duration(milliseconds: 300),
+                                          curve: Curves.easeInOut,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              // ─── 제목 & 재료 ────────────────
+                              Text(
+                                recipes[_currentIndex].title,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Divider(thickness: 1),
+                              const SizedBox(height: 8),
+                              const Text(
+                                '재료',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    border:
+                                        Border.all(color: Colors.grey.shade300),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    recipes[_currentIndex].ingredients,
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
                               ),
-                            );
-                          },
-                        ),
-
-                        // ◀️ 왼쪽 화살표 (항상 오른쪽으로 넘어가는 애니메이션만 사용)
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: IconButton(
-                            icon: const Icon(Icons.chevron_left, size: 32),
-                            onPressed: () {
-                              // 오른쪽으로 한 칸씩 이동
-                              _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            },
+                            ],
                           ),
-                        ),
-                        // ▶️ 오른쪽 화살표
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: IconButton(
-                            icon: const Icon(Icons.chevron_right, size: 32),
-                            onPressed: () {
-                              _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // ─── 레시피 제목
-                  Text(
-                    recipes[_currentIndex].title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(thickness: 1),
-                  const SizedBox(height: 8),
-
-                  // ─── 재료 헤더
-                  const Text(
-                    '재료',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // ─── 재료 박스
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ListView.separated(
-                        itemCount: recipes[_currentIndex].ingredients.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 4),
-                        itemBuilder: (ctx, i) => Text(
-                          '• ${recipes[_currentIndex].ingredients[i]}',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );

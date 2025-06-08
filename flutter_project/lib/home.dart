@@ -4,44 +4,30 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'recipe.dart'; // recipe.dart의 RecipePage를 가져옵니다
-import 'manage.dart'; //
+import 'manage.dart';
+import 'notice.dart'; 
+// import 'today_recipe.dart'; 서버 연동 후 사용
+// import 'models/recipe.dart'; 서버 연동 후 사용
 
-/// 공지사항 모델
-class Post {
-  final int id;
-  final String title;
-  final DateTime date;
-  Post({required this.id, required this.title, required this.date});
-}
-
-/// 오늘의 메뉴 모델
-class Menu {
-  final String name;
-  final String imageUrl;
-  Menu({required this.name, required this.imageUrl});
-}
-
-/// 데이터 서비스 (더미)
 class DataService {
-  static Future<List<Post>> fetchLatestPosts(int count) async {
+  static Future<List<Notice>> fetchLatestPosts(int count) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return List.generate(count, (i) => Post(
+    return List.generate(count, (i) => Notice(
       id: count - i,
       title: '공지 ${count - i}',
-      date: DateTime.now().subtract(Duration(days: i)),
+      createdAt: DateTime.now().subtract(Duration(days: i)),
     ));
   }
-
-  static Future<Menu> getTodayMenu() async {
-    final candidates = [
-      Menu(name: '토마토 스프 파스타', imageUrl: 'https://via.placeholder.com/100'),
-      Menu(name: '크림 리조또',     imageUrl: 'https://via.placeholder.com/100'),
-      Menu(name: '카레 라이스',     imageUrl: 'https://via.placeholder.com/100'),
-    ];
-    await Future.delayed(const Duration(milliseconds: 300));
-    return candidates[Random().nextInt(candidates.length)];
-  }
 }
+
+final List<Map<String, String>> dummyRecipes = [
+  {'name': '토마토 스프 파스타', 'description': '부드럽고 고소한 풍미 가득',
+    'imageUrl': 'https://via.placeholder.com/100'},
+  {'name': '크림 리조또', 'description': '부드럽고 고소한 풍미 가득',
+    'imageUrl': 'https://via.placeholder.com/100'},
+  {'name': '카레 라이스', 'description': '부드럽고 고소한 풍미 가득',
+    'imageUrl': 'https://via.placeholder.com/100'},
+];
 
 /// 홈 페이지
 class HomePage extends StatefulWidget {
@@ -51,21 +37,38 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<List<Post>> _postsFuture;
-  late Future<Menu> _menuFuture;
+  late Future<List<Notice>> _noticesFuture;
 
   @override
   void initState() {
     super.initState();
-    _postsFuture = DataService.fetchLatestPosts(4);
-    _menuFuture = DataService.getTodayMenu();
+    _noticesFuture = DataService.fetchLatestPosts(4);
   }
 
   @override
   Widget build(BuildContext context) {
-    final expiredNotice = '바나나 소비기한 임박 2025-05-21';
     final now = DateTime.now();
     final formattedDate = DateFormat('EEEE d MMMM y HH:mm').format(now);
+
+    final List<Map<String, dynamic>> dummyIngredients = [
+      {'name': '전복', 'expiration': DateTime(2025, 05, 22)},
+      {'name': '사과', 'expiration': DateTime(2025, 05, 28)},
+      {'name': '소고기', 'expiration': DateTime(2025, 05, 21)},
+    ]; //유통기한 임박 식재료 더미 리스트
+
+    final soonToExpire = dummyIngredients.where((item) {
+      final diff = item['expiration'].difference(now).inDays;
+      return diff >= 0 && diff <= 3;
+    }).toList(); //유통기한 3일 이내 재료 추출
+
+    final dateFormat = DateFormat('yyyy-MM-dd');
+    final expiredNotice = soonToExpire.isNotEmpty
+        ? soonToExpire.map((item) {
+      final name = item['name'];
+      final date = dateFormat.format(item['expiration']);
+      return '$name 소비기한 임박 $date';
+    }).join('\n')
+        : '소비기한 임박 식재료 없음';
 
     return Scaffold(
       body: SafeArea(
@@ -80,7 +83,7 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     child: Text(
                       expiredNotice,
-                      style: const TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 14, color: Colors.red),
                     ),
                   ),
                   IconButton(
@@ -142,106 +145,61 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 32),
               // 공지사항 + 오늘의 메뉴
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 공지사항
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          '공지사항',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        FutureBuilder<List<Post>>(
-                          future: _postsFuture,
-                          builder: (context, snap) {
-                            if (snap.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
-                            if (snap.hasError || !snap.hasData) {
-                              return const Text('공지 로드 실패');
-                            }
-                            final posts = snap.data!;
-                            return ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: posts.length,
-                              separatorBuilder: (_, __) => const Divider(),
-                              itemBuilder: (context, i) {
-                                return Text(posts[i].title);
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+              SizedBox(
+                height: 200,
+                child: NoticeBoard(),
+              ),
 
-                  const SizedBox(width: 24),
-                  // 오늘의 메뉴
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Text(
-                          '오늘의 메뉴',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // 오늘의 메뉴 더미데이터
+              Builder(
+                builder: (context) {
+                  final today = DateTime.now();
+                  final index = today.day % dummyRecipes.length;
+                  final recipe = dummyRecipes[index];
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text(
+                        '오늘의 메뉴',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          recipe['imageUrl']!,
+                          width: double.infinity,
+                          height: 160,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            height: 160,
+                            color: Colors.grey.shade200,
+                            child: const Center(child: Icon(Icons.broken_image)),
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        FutureBuilder<Menu>(
-                          future: _menuFuture,
-                          builder: (context, snap) {
-                            if (snap.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
-                            if (snap.hasError || !snap.hasData) {
-                              return const Text('메뉴 로드 실패');
-                            }
-                            final menu = snap.data!;
-                            return Column(
-                              children: [
-                                SizedBox(
-                                  width: 100,
-                                  height: 100,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      menu.imageUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey.shade200,
-                                          child: const Center(
-                                            child: Icon(
-                                              Icons.broken_image,
-                                              size: 48,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(menu.name),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        recipe['name']!,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        recipe['description']!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  );
+                },
+              ),
+
+
                 ],
               ),
-            ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
 

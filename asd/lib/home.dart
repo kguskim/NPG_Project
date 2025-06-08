@@ -1,21 +1,27 @@
 // lib/home.dart
-
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:yolo/food_ingredient_detection_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yolo/food_ingredient_detection_page.dart';
+import 'package:yolo/login_page.dart';
+import 'package:yolo/manage.dart';
 import 'package:yolo/notice_page.dart';
-import 'recipe.dart'; // RecipePage
-import 'manage.dart'; // ManagePage
-import 'login_page.dart'; // LoginPage
+import 'package:yolo/recipe.dart';
+import 'package:http/http.dart' as http;
+import 'package:yolo/detailed_recipe.dart';
 import 'widgets/to_buy_section.dart';
+import 'models/today_recipe_model.dart';
+import 'today_detailed_recipe.dart';
+import 'package:yolo/config/constants.dart';
 
 /// 공지사항 모델
 class Post {
   final int id;
   final String title;
   final DateTime date;
+
   Post({required this.id, required this.title, required this.date});
 }
 
@@ -23,10 +29,11 @@ class Post {
 class Menu {
   final String name;
   final String imageUrl;
+
   Menu({required this.name, required this.imageUrl});
 }
 
-/// 더미 데이터 서비스
+/// 더미 데이터 서비스 (공지사항)
 class DataService {
   static Future<List<Post>> fetchLatestPosts(int count) async {
     await Future.delayed(const Duration(milliseconds: 500));
@@ -51,33 +58,91 @@ class DataService {
   }
 }
 
+/// 만료 알림을 가져오는 API 호출 함수
+Future<String> fetchExpireNotice(String userId, int days) async {
+  final uri = Uri.parse(
+    '${ApiConfig.baseUrl}/ingredients'
+    '?user_id=${Uri.encodeComponent(userId)}'
+    '&expire_within=$days',
+  );
+  final res = await http.get(uri, headers: {
+    'Accept': 'application/json',
+  });
+
+  if (res.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (data.isEmpty) {
+      return '소비기한 임박한 식재료가 없습니다.';
+    }
+    // 3개까지만 보여주고 나머지는 개수 표기
+    final names = data.map((e) => e['ingredient_name'] as String).toList();
+    final firstThree = names.take(3).join(', ');
+    final more = names.length > 3 ? ' 등 ${names.length}개' : '';
+    return '$firstThree$more 이 곧 만료됩니다.';
+  } else {
+    throw Exception('만료 알림 불러오기 실패 (${res.statusCode})');
+  }
+}
+
+/// 오늘의 메뉴를 TodayRecipeModel 로 가져오는 함수
+Future<TodayRecipeModel> fetchTodayRecipe(String userId) async {
+  //  URL 구성: baseUrl + '/recipes/recommend/today' + userId 쿼리 파라미터
+  final uri = Uri.parse('${ApiConfig.baseUrl}/recipes/recommend/today');
+  // 2) GET 요청 보내기
+   final response = await http.get(
+     uri,
+     headers: {
+       'Content-Type': 'application/json',
+       // 필요하다면 Authorization 등 헤더 추가
+     },
+   );
+  // 3) 응답 상태 코드 확인
+   if (response.statusCode == 200) {
+     // 4) 응답 본문을 JSON 파싱 후 TodayRecipeModel 생성
+     final Map<String, dynamic> jsonMap = jsonDecode(utf8.decode(response.bodyBytes));
+     return TodayRecipeModel.fromJson(jsonMap);
+   } else {
+     // 에러가 났다면 예외 던지기
+     throw Exception('오늘의 메뉴를 불러오는 데 실패했습니다 (status: ${response.statusCode})');
+   }
+
+
+}
+
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final String userId;
+
+  const HomePage({Key? key, required this.userId}) : super(key: key);
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
+  late Future<TodayRecipeModel> _todayFuture;
+  late Future<String> _noticeFuture;
   late Future<Menu> _menuFuture;
   List<String> _toBuy = [];
 
   @override
   void initState() {
     super.initState();
-    _loadToBuy(); // ← 여기에 로컬에 저장된 리스트를 불러옵니다.
+    _loadToBuy();
+    // 만료 알림, 공지, 메뉴를 동시에 초기화
+    _noticeFuture = fetchExpireNotice(widget.userId, 7);
     _postsFuture = DataService.fetchLatestPosts(4);
     _menuFuture = DataService.getTodayMenu();
+    _todayFuture = fetchTodayRecipe(widget.userId);
   }
 
-  // 2) SharedPreferences에서 불러오기
+  // SharedPreferences에서 구매할 리스트 불러오기
   Future<void> _loadToBuy() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getStringList('toBuy') ?? [];
-    setState(() => _toBuy = saved);
+    _toBuy = prefs.getStringList('toBuy') ?? [];
+    setState(() {});
   }
 
-  // 3) SharedPreferences에 저장하기
   Future<void> _saveToBuy() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('toBuy', _toBuy);
@@ -107,39 +172,35 @@ class _HomePageState extends State<HomePage> {
       },
     );
     if (input != null && input.trim().isNotEmpty) {
-      setState(() => _toBuy.add(input.trim()));
-      await _saveToBuy(); // ← 리스트 변경 후 바로 저장
+      _toBuy.add(input.trim());
+      await _saveToBuy();
+      setState(() {});
     }
   }
 
   Future<void> _removeItem(String txt) async {
-    setState(() => _toBuy.remove(txt));
-    await _saveToBuy(); // ← 삭제 후에도 저장
+    _toBuy.remove(txt);
+    await _saveToBuy();
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final expiredNotice = '바나나 소비기한 임박 2025-05-21';
-    final formattedDate =
-        DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
+    final nowTxt = DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('홈'),
         actions: [
-          // 유저 아이콘 → showMenu 로 아이콘 바로 아래에 메뉴 띄우기
           Builder(builder: (ctx) {
             return IconButton(
               icon: const Icon(Icons.person),
               onPressed: () async {
-                // 버튼과 오버레이(RenderBox) 가져오기
-                final RenderBox button = ctx.findRenderObject() as RenderBox;
-                final RenderBox overlay =
-                    Overlay.of(ctx).context.findRenderObject() as RenderBox;
-                // 버튼의 글로벌 위치 계산
-                final Offset pos =
+                final button = ctx.findRenderObject() as RenderBox;
+                final overlay =
+                    Overlay.of(ctx)!.context.findRenderObject() as RenderBox;
+                final pos =
                     button.localToGlobal(Offset.zero, ancestor: overlay);
-                // 메뉴 띄우기 (아이콘 바로 아래)
                 final selected = await showMenu<String>(
                   context: ctx,
                   position: RelativeRect.fromLTRB(
@@ -149,7 +210,7 @@ class _HomePageState extends State<HomePage> {
                     pos.dy,
                   ),
                   items: [
-                    const PopupMenuItem(value: 'logout', child: Text('LOGOUT')),
+                    const PopupMenuItem(value: 'logout', child: Text('LOGOUT'))
                   ],
                 );
                 if (selected == 'logout') {
@@ -167,19 +228,41 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── 메인 콘텐츠 스크롤 영역 ──
+            // ── 만료 알림 영역 ──
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: FutureBuilder<String>(
+                future: _noticeFuture,
+                builder: (ctx, snap) {
+                  String notice;
+                  if (snap.connectionState != ConnectionState.done) {
+                    notice = '알림 로딩 중...';
+                  } else if (snap.hasError) {
+                    notice = '알림 불러오기 실패';
+                  } else {
+                    notice = snap.data!;
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(notice, style: const TextStyle(fontSize: 14)),
+                      const SizedBox(height: 8),
+                      Text(nowTxt, style: const TextStyle(fontSize: 16)),
+                    ],
+                  );
+                },
+              ),
+            ),
+
+            // ── 나머지 홈 화면 ──
+            // ─── 메인 스크롤 영역 ───
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(expiredNotice, style: const TextStyle(fontSize: 14)),
-                    const SizedBox(height: 8),
-                    Center(
-                        child: Text(formattedDate,
-                            style: const TextStyle(fontSize: 16))),
-                    const SizedBox(height: 24),
+                    // 네비 버튼
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -188,7 +271,8 @@ class _HomePageState extends State<HomePage> {
                           label: '재료',
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const App()),
+                            MaterialPageRoute(
+                                builder: (_) => App(userId: widget.userId)),
                           ),
                         ),
                         _NavButton(
@@ -197,7 +281,8 @@ class _HomePageState extends State<HomePage> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const ManagePage()),
+                                builder: (_) =>
+                                    ManagePage(userId: widget.userId)),
                           ),
                         ),
                         _NavButton(
@@ -206,19 +291,23 @@ class _HomePageState extends State<HomePage> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const RecipePage()),
+                                builder: (_) =>
+                                    RecipePage(userId: widget.userId)),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 32),
+
+                    // ─── 공지사항 영역 ───
                     IntrinsicHeight(
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
+                          // 공지사항
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 const Text('공지사항',
                                     style: TextStyle(
@@ -237,44 +326,32 @@ class _HomePageState extends State<HomePage> {
                                     return Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children: snap.data!
-                                          .asMap()
-                                          .entries
-                                          .map((entry) {
-                                        final i = entry.key;
-                                        final p = entry.value;
+                                      children:
+                                          snap.data!.asMap().entries.map((e) {
+                                        final p = e.value;
                                         return Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
                                             GestureDetector(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  ctx,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        NoticeBoard(
-                                                            noticeId: p.id),
-                                                  ),
-                                                );
-                                              },
+                                              onTap: () => Navigator.push(
+                                                ctx,
+                                                MaterialPageRoute(
+                                                    builder: (_) => NoticeBoard(
+                                                        noticeId: p.id)),
+                                              ),
                                               child: Padding(
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                         vertical: 4.0),
-                                                child: Text(
-                                                  '${p.title}',
-                                                  style: const TextStyle(
-                                                    color:
-                                                        Colors.black, // 파란색 제거
-                                                    decoration: TextDecoration
-                                                        .none, // 밑줄 제거
-                                                  ),
-                                                ),
+                                                child: Text(p.title,
+                                                    style: const TextStyle(
+                                                        decoration:
+                                                            TextDecoration.none,
+                                                        color: Colors.black)),
                                               ),
                                             ),
-                                            // 마지막 항목이 아니라면 Divider 추가
-                                            if (i < snap.data!.length - 1)
+                                            if (e.key < snap.data!.length - 1)
                                               const Divider(height: 1),
                                           ],
                                         );
@@ -285,60 +362,94 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 24),
+                          // ─── 오늘의 메뉴 영역 ───
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                const Text('오늘의 메뉴',
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold)),
+                                const Text(
+                                  '오늘의 메뉴',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(height: 8),
-                                FutureBuilder<Menu>(
-                                  future: _menuFuture,
+                                FutureBuilder<TodayRecipeModel>(
+                                  future: _todayFuture,
                                   builder: (ctx, snap) {
-                                    return Container(
-                                      width: 100,
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade200,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: (snap.connectionState ==
-                                                  ConnectionState.done &&
-                                              snap.hasData)
-                                          ? Image.network(snap.data!.imageUrl,
+                                    if (snap.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Center(
+                                          child: CircularProgressIndicator());
+                                    }
+                                    if (snap.hasError) {
+                                      return const Text('오늘의 메뉴 불러오기 실패');
+                                    }
+                                    final today = snap.data!;
+                                    return Column(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    DetailedRecipePage(
+                                                  imageUrls: today.stepImages,
+                                                  steps: today.stepDetails,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            width: 100,
+                                            height: 100,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade200,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Image.network(
+                                              today.imageUrl,
                                               fit: BoxFit.cover,
                                               errorBuilder: (_, __, ___) =>
                                                   const Icon(
-                                                      Icons.broken_image))
-                                          : const SizedBox.shrink(),
+                                                      Icons.broken_image),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          today.title,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     );
                                   },
                                 ),
-                                const SizedBox(height: 8),
-                                FutureBuilder<Menu>(
-                                    future: _menuFuture,
-                                    builder: (ctx, snap) => Text(
-                                        snap.hasData ? snap.data!.name : '')),
                               ],
                             ),
                           ),
+
+                          const SizedBox(width: 16),
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
 
-            // ── 구매가 필요한 식재료 (하단 고정) ──
+            // ─── 구매가 필요한 식재료 ───
             Container(
               color: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ToBuySection(
                 items: _toBuy,
                 onAdd: _addItem,
@@ -357,12 +468,10 @@ class _NavButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _NavButton({
-    Key? key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  }) : super(key: key);
+
+  const _NavButton(
+      {Key? key, required this.icon, required this.label, required this.onTap})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {

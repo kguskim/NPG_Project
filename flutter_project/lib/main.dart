@@ -7,3 +7,13 @@ void main() {
 }
 
 
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: HomePage(), 
+    );
+  }
+} //테스트코드용

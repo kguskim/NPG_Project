@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:yolo/config/constants.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -18,7 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> registerUser() async {
     final url = Uri.parse(
-        'https://3d57-121-188-29-7.ngrok-free.app/users/register'); // 여기를 실제 서버 주소로 변경하세요
+        '${ApiConfig.baseUrl}/users/register'); 
 
     final response = await http.post(
       url,
@@ -28,7 +29,7 @@ class _RegisterPageState extends State<RegisterPage> {
         'password': passwordController.text,
         'user_email': emailController.text,
         'phone': phoneController.text,
-        'name' : nameController.text
+        'name': nameController.text
       }),
     );
 

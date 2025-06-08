@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:yolo/config/constants.dart';
 
 class NoticePage extends StatelessWidget {
   const NoticePage({super.key});
@@ -60,11 +61,11 @@ class _NoticeBoardState extends State<NoticeBoard> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://example.com/api/notices/$id'),
+        Uri.parse('${ApiConfig.baseUrl}/notices/$id'),
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
           notice = data;
           isLoading = false;

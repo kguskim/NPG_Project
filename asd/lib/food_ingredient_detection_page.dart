@@ -8,7 +8,8 @@ import 'package:yolo/insert_page.dart';
 late List<CameraDescription> cameras;
 
 class App extends StatelessWidget {
-  const App({super.key});
+  final String userId;
+  const App({super.key,required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -20,14 +21,15 @@ class App extends StatelessWidget {
         ),
         debugShowCheckedModeBanner: false,
         // home: const MainScreen(),
-        home: const YoloVideo());
+        home: YoloVideo(userId: userId));
   }
 }
 
 // YOLO V5 REAL-TIME OBJECT DETECTION
 
 class YoloVideo extends StatefulWidget {
-  const YoloVideo({super.key});
+  final String userId;
+  const YoloVideo({super.key, required this.userId});
 
   @override
   State<YoloVideo> createState() => _YoloVideoState();
@@ -122,6 +124,7 @@ class _YoloVideoState extends State<YoloVideo> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => InsertPage(
+                      userId: widget.userId,
                       data: firstTag,
                       imagePath: imageFile.path, // File path 전달
                     ),
