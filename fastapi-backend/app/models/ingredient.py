@@ -12,5 +12,6 @@ class Ingredient(Base):
     expiration_date = Column(Date, nullable=False)
     alias = Column(String(100), nullable=True)
     area_id = Column(Integer, nullable=True)
+    fridge_id = Column(Integer, nullable=True)
     image = Column(String(255), nullable=True)
     note = Column(Text, nullable=True)

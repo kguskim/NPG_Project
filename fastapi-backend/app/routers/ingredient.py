@@ -3,8 +3,11 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.schemas.ingredient import IngredientCreate, IngredientResponse
 from app.models.ingredient import Ingredient
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+from app.schemas.ingredient import IngredientSearchResponse 
 from fastapi import Path
+from typing import List
+from sqlalchemy import or_
 
 router = APIRouter()
 
@@ -15,13 +18,25 @@ def get_db():
     finally:
         db.close()
 
-@router.post("/ingredients", response_model=IngredientResponse)#추가
+@router.post("/ingredients", response_model=IngredientResponse)#삽입입
 def create_ingredient(data: IngredientCreate, db: Session = Depends(get_db)):
-    new_item = Ingredient(**data.dict())
+    new_item = Ingredient(
+        user_id=data.user_id,
+        ingredient_name=data.ingredient_name,
+        quantity=data.quantity,
+        purchase_date=data.purchase_date,         
+        expiration_date=data.expiration_date,    
+        alias=data.alias,
+        area_id=data.area_id,
+        fridge_id=data.fridge_id,
+        image=data.image,
+        note=data.note,
+    )
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
     return new_item
+
 
 @router.get("/ingredients", response_model=list[IngredientResponse]) #검색
 def get_ingredients(
@@ -75,3 +90,17 @@ def delete_ingredient(ingredient_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "재료가 삭제되었습니다."}
 
+@router.get("/ingredients/search", response_model=List[IngredientSearchResponse]) #키워드로 검색
+def search_ingredients(
+    user_id: str = Query(..., description="사용자 ID"),
+    keyword: str = Query(..., description="검색 키워드"),
+    db: Session = Depends(get_db)
+):
+    results = db.query(Ingredient).filter(
+        Ingredient.user_id == user_id,
+        or_(
+            Ingredient.ingredient_name.like(f"%{keyword}%"),
+            Ingredient.alias.like(f"%{keyword}%")
+        )
+    ).all()
+    return results
