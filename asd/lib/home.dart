@@ -108,6 +108,30 @@ Future<TodayRecipeModel> fetchTodayRecipe(String userId) async {
 
 
 }
+/// 공지사항 가져오는 함수
+Future<List<Post>> fetchAnnouncements() async {
+  final uri = Uri.parse('${ApiConfig.baseUrl}/notice');
+  final response = await http.get(
+    uri,
+    headers: {
+      'Accept': 'application/json',
+      // 필요하다면 Authorization 등 헤더 추가
+    },
+  );
+
+  if (response.statusCode == 200) {
+    // 서버에서 [{id:1, title:"...", date:"2025-06-09T10:00:00Z"}, ...] 형태로 내려온다고 가정
+    final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+    return data.map((e) => Post(
+      id: e['id'] as int,
+      title: e['title'] as String,
+      date: DateTime.parse(e['date'] as String),
+    )).toList();
+  } else {
+    throw Exception('공지사항을 불러오는 데 실패했습니다 (status: ${response.statusCode})');
+  }
+}
+
 
 class HomePage extends StatefulWidget {
   final String userId;
