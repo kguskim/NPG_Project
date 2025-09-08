@@ -15,13 +15,14 @@ class LoginPage extends StatelessWidget {
     final password = controller2.text;
 
     try {
-      final url = Uri.parse(
-          '${ApiConfig.baseUrl}/users/login'); 
+      final url = Uri.parse('${ApiConfig.baseUrl}/users/login');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'user_id': id, 'password': password}),
       );
+      showSnackBar(context, Text(id));
+
       if (response.statusCode == 200 && response.body == 'success') {
         Navigator.push(
           context,
