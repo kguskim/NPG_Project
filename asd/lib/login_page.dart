@@ -21,7 +21,7 @@ class LoginPage extends StatelessWidget {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'user_id': id, 'password': password}),
       );
-      showSnackBar(context, Text(id));
+      showSnackBar(context, Text("환영합니다 " + id + "님"));
 
       if (response.statusCode == 200 && response.body == 'success') {
         Navigator.push(
@@ -80,7 +80,20 @@ class LoginPage extends StatelessWidget {
                               const InputDecoration(labelText: 'Password'),
                           obscureText: true,
                         ),
-                        const SizedBox(height: 40.0),
+                        const SizedBox(height: 15.0),
+
+                        // 아이디/비밀번호 찾기 버튼 추가
+                        TextButton(
+                          onPressed: () {
+                            // 아이디/비밀번호 찾기 페이지로 이동
+                            // 여기에 아이디/비밀번호 찾기 페이지 구현 필요
+                          },
+                          child: const Text(
+                            "아이디/비밀번호 찾기",
+                          ),
+                        ),
+
+                        // 회원가입 버튼
                         TextButton(
                           onPressed: () {
                             Navigator.push(
@@ -93,7 +106,10 @@ class LoginPage extends StatelessWidget {
                           },
                           child: const Text("회원가입"),
                         ),
+
                         const SizedBox(height: 5.0),
+
+                        // 로그인 버튼
                         ElevatedButton(
                           onPressed: () => login(context),
                           style: ElevatedButton.styleFrom(
