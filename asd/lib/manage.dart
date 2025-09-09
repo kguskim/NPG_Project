@@ -1,11 +1,7 @@
-// lib/manage.dart
-
-import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 import 'package:yolo/login_page.dart';
 import 'package:yolo/config/constants.dart';
 
@@ -59,7 +55,7 @@ class FridgeItem {
   final int ingredient_id;
   final String imageUrl;
   final int fridge_id;
-  final int area_id;
+  int area_id;
   final String alias;
   final int quantity;
   final String purchase_date;
@@ -279,9 +275,37 @@ class _ManagePageState extends State<ManagePage> {
                         aspectRatio: 1, // 너비 = 높이 비율(정사각형)
                         child: GestureDetector(
                           onTap: () => _showItemDetailDialog(item),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: _buildImage(item.imageUrl),
+                          child: DragTarget<FridgeItem>(
+                            onAccept: (draggedItem) {
+                              setState(() {
+                                draggedItem.area_id = _currentCompartment + 1;
+                              });
+                            },
+                            builder: (context, candidateData, rejectedData) {
+                              return Draggable<FridgeItem>(
+                                data: item,
+                                onDragCompleted: () {
+                                  // Handle drag completion if needed
+                                },
+                                feedback: Material(
+                                  color: Colors.transparent,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: SizedBox(
+                                      width: 100, // 원하는 크기로 설정
+                                      height: 100, // 원하는 크기로 설정
+                                      child: _buildImage(item.imageUrl),
+                                    ),
+                                  ),
+                                ),
+                                childWhenDragging:
+                                    Container(), // What to show when dragging
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: _buildImage(item.imageUrl),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -315,7 +339,12 @@ class _ManagePageState extends State<ManagePage> {
                 border: OutlineInputBorder(),
               ),
               items: _fridges
-                  .map((f) => DropdownMenuItem(value: f, child: Text(f, overflow: TextOverflow.ellipsis,)))
+                  .map((f) => DropdownMenuItem(
+                      value: f,
+                      child: Text(
+                        f,
+                        overflow: TextOverflow.ellipsis,
+                      )))
                   .toList(),
               value: _selectedFridge,
               onChanged: (v) {
@@ -481,8 +510,8 @@ class _ManagePageState extends State<ManagePage> {
   /// 서버에 PATCH 요청으로 아이템 정보 업데이트
   Future<void> _updateItemOnServer(
       FridgeItem item, Map<String, dynamic> data) async {
-    final uri = Uri.parse(
-        '${ApiConfig.baseUrl}/ingredients/${item.ingredient_id}');
+    final uri =
+        Uri.parse('${ApiConfig.baseUrl}/ingredients/${item.ingredient_id}');
     final res = await http.put(
       uri,
       headers: {'Content-Type': 'application/json'},
