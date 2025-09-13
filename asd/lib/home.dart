@@ -330,60 +330,79 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           // 공지사항
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Text('공지사항',
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 8),
-                                FutureBuilder<List<Post>>(
-                                  future: _postsFuture,
-                                  builder: (ctx, snap) {
-                                    if (snap.connectionState !=
-                                            ConnectionState.done ||
-                                        snap.hasError ||
-                                        snap.data!.isEmpty) {
-                                      return const Text('공지 로드 실패');
-                                    }
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children:
-                                          snap.data!.asMap().entries.map((e) {
-                                        final p = e.value;
-                                        return Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () => Navigator.push(
-                                                ctx,
-                                                MaterialPageRoute(
-                                                    builder: (_) => NoticeBoard(
-                                                        noticeId: p.id)),
-                                              ),
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 4.0),
-                                                child: Text(p.title,
+                            child: Container( // Container로 감싸서 스타일 적용
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade300),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    spreadRadius: 1,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Text('공지사항',
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 12), // 여백 살짝 조정
+                                  FutureBuilder<List<Post>>(
+                                    future: _postsFuture,
+                                    builder: (ctx, snap) {
+                                      if (snap.connectionState !=
+                                              ConnectionState.done ||
+                                          snap.hasError ||
+                                          snap.data!.isEmpty) {
+                                        return const Text('공지 로드 실패');
+                                      }
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children:
+                                            snap.data!.asMap().entries.map((e) {
+                                          final p = e.value;
+                                          return Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () => Navigator.push(
+                                                  ctx,
+                                                  MaterialPageRoute(
+                                                      builder: (_) => NoticeBoard(
+                                                          noticeId: p.id)),
+                                                ),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                          vertical: 4.0),
+                                                  child: Text(
+                                                    p.title,
                                                     style: const TextStyle(
                                                         decoration:
                                                             TextDecoration.none,
-                                                        color: Colors.black)),
+                                                        color: Colors.black),
+                                                    overflow: TextOverflow.ellipsis, // 글자가 길면 ... 처리
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                            if (e.key < snap.data!.length - 1)
-                                              const Divider(height: 1),
-                                          ],
-                                        );
-                                      }).toList(),
-                                    );
-                                  },
-                                ),
-                              ],
+                                              if (e.key < snap.data!.length - 1)
+                                                const Divider(height: 1),
+                                            ],
+                                          );
+                                        }).toList(),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           // ─── 오늘의 메뉴 영역 ───
@@ -487,7 +506,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// 네비 버튼 위젯
+// 수정된 코드
 class _NavButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -501,12 +520,30 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        children: [
-          Icon(icon, size: 32),
-          const SizedBox(height: 4),
-          Text(label),
-        ],
+      child: Container( // GestureDetector의 유일한 child
+        // 아이콘 사이즈 고정
+        width: 95,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3))
+            ]),
+        // Column을 Container의 child로 이동
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32),
+            const SizedBox(height: 4),
+            Text(label),
+          ],
+        ),
       ),
     );
   }
