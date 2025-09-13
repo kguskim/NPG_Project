@@ -1,10 +1,9 @@
-// lib/insert_page.dart
-
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yolo/home.dart';
+import 'package:yolo/login_page.dart';
 import 'package:yolo/manage.dart'; // fridgeLayouts 사용
 import 'package:http/http.dart' as http;
 import 'package:yolo/config/constants.dart';
@@ -88,11 +87,11 @@ class InsertPageState extends State<InsertPage> {
 
   Future<void> _loadLastFridge() async {
     final prefs = await SharedPreferences.getInstance();
-    final fridgeName =
-        prefs.getString('last_selected_fridge') ?? fridgeLayouts.keys.first;
+    final fridgeName = prefs.getString('last_selected_fridge') ??
+        fridgeLayoutsNames.keys.first;
     setState(() {
       _selectedFridgeName = fridgeName;
-      final locs = fridgeLayouts[_selectedFridgeName]!.keys.toList();
+      final locs = fridgeLayoutsNames[_selectedFridgeName]!.toList();
       _selectedLocation = locs.first;
     });
   }
@@ -114,7 +113,7 @@ class InsertPageState extends State<InsertPage> {
 
   @override
   Widget build(BuildContext context) {
-    final locations = fridgeLayouts[_selectedFridgeName]!.keys.toList();
+    final locations = fridgeLayoutsNames[_selectedFridgeName]!.toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -291,7 +290,7 @@ class InsertPageState extends State<InsertPage> {
   Future<void> _onSubmit() async {
     // fridge_id, area_id 계산
     final fridgeId = fridges.indexOf(_selectedFridgeName);
-    final locs = fridgeLayouts[_selectedFridgeName]!.keys.toList();
+    final locs = fridgeLayoutsNames[_selectedFridgeName]!.toList();
     final areaId = locs.indexOf(_selectedLocation) + 1;
 
     final imageUrl = await _uploadImage(File(widget.imagePath));
@@ -313,6 +312,8 @@ class InsertPageState extends State<InsertPage> {
       "note": _memoController.text,
       "fridge_id": fridgeId,
     };
+
+    showSnackBar(context, Text(data.toString()));
 
     final resp = await http.post(
       Uri.parse("${ApiConfig.baseUrl}/ingredients"),

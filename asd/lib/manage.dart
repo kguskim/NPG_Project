@@ -2,13 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yolo/login_page.dart';
 import 'package:yolo/config/constants.dart';
 
 /// SharedPreferences에 저장된 마지막 선택된 냉장고 이름 키
 const _kLastSelectedFridgeKey = 'last_selected_fridge';
 
-// 앱을 껐다 켜도 사용자가 마지막에 선택한 냉장고 이름을 기억해두는 함수
 void _saveFridgeName(String fridgeName) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString(_kLastSelectedFridgeKey, fridgeName);
@@ -49,6 +47,62 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
   },
 };
 
+const Map<String, List<String>> fridgeLayoutsNames = {
+  'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L': [
+    '냉장실 1층',
+    '냉장실 2층',
+    '냉장실 3층',
+    '냉장실 4층',
+    '냉장실 5층',
+    '냉동실 1층',
+    '냉동실 2층',
+    '냉동실 3층',
+    '냉장실 문칸 1층',
+    '냉장실 문칸 2층',
+    '냉장실 문칸 3층',
+  ],
+  'LG 모던엣지 냉장고 462L': [
+    '냉장실 1층',
+    '냉장실 2층',
+    '냉장실 3층',
+    '냉장실 4층',
+    '냉장실 5층',
+    '냉동실 1층',
+    '냉동실 2층',
+    '냉동실 3층',
+    '냉장실 문칸 1층 왼',
+    '냉장실 문칸 2층 왼',
+    '냉장실 문칸 3층 왼',
+    '냉장실 문칸 4층 왼',
+    '냉장실 문칸 1층 오',
+    '냉장실 문칸 2층 오',
+    '냉장실 문칸 3층 오',
+    '냉장실 문칸 4층 오',
+  ],
+  '신규 냉장고': [
+    '냉장실 1층 왼',
+    '냉장실 2층 왼',
+    '냉장실 1층 오',
+    '냉장실 2층 오',
+    '냉동실 1층',
+    '냉동실 2층',
+    '문칸 상단 왼',
+    '문칸 상단 오',
+    '문칸 하단 왼',
+    '문칸 하단 오',
+  ],
+};
+
+/// 간단한 범위 클래스
+class CompRange {
+  final int start;
+  final int end;
+  CompRange(this.start, this.end);
+  int get count => end - start + 1;
+  bool contains(int v) => v >= start && v <= end;
+  int indexOf(int v) => v - start;
+}
+
 /// 냉장고 안의 식재료나 물건 하나를 표현하는 모델 클래스입니다.
 class FridgeItem {
   final String user_id;
@@ -86,26 +140,34 @@ class FridgeItem {
       quantity: json['quantity'],
       expiration_date: json['expiration_date'],
       purchase_date: json['purchase_date'],
-      memo: json['note'],
+      memo: json['note'] ?? '',
     );
   }
 
   FridgeItem copyWith({
-    String? id,
+    String? user_id,
     String? imageUrl,
     int? ingredient_id,
+    int? fridge_id,
+    int? area_id,
+    String? alias,
+    int? quantity,
+    String? expiration_date,
+    String? purchase_date,
+    String? memo,
   }) {
     return FridgeItem(
-        user_id: id ?? this.user_id,
-        imageUrl: imageUrl ?? this.imageUrl,
-        ingredient_id: ingredient_id ?? this.ingredient_id,
-        fridge_id: fridge_id ?? this.fridge_id,
-        area_id: area_id ?? this.area_id,
-        alias: alias ?? this.alias,
-        quantity: quantity ?? this.quantity,
-        expiration_date: expiration_date ?? this.expiration_date,
-        purchase_date: purchase_date ?? this.purchase_date,
-        memo: memo ?? this.memo);
+      user_id: user_id ?? this.user_id,
+      imageUrl: imageUrl ?? this.imageUrl,
+      ingredient_id: ingredient_id ?? this.ingredient_id,
+      fridge_id: fridge_id ?? this.fridge_id,
+      area_id: area_id ?? this.area_id,
+      alias: alias ?? this.alias,
+      quantity: quantity ?? this.quantity,
+      expiration_date: expiration_date ?? this.expiration_date,
+      purchase_date: purchase_date ?? this.purchase_date,
+      memo: memo ?? this.memo,
+    );
   }
 }
 
@@ -113,13 +175,6 @@ const Map<int, String> fridgeIdToName = {
   0: 'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L',
   1: 'LG 모던엣지 냉장고 462L',
   2: '신규 냉장고',
-};
-
-// 예시 매핑 (서버 ID → UI에서 사용하는 이름)
-const Map<int, Map<int, String>> areaIdToName = {
-  0: {1: '냉장실', 2: '냉동실', 3: '냉장실 문칸'},
-  1: {1: '냉장실', 2: '냉동실', 3: '냉장실 문칸'},
-  2: {1: '냉장실', 2: '냉동실', 3: '문칸 상단', 4: '문칸 하단'},
 };
 
 /// 냉장고 관리 페이지
@@ -159,18 +214,12 @@ class _ManagePageState extends State<ManagePage> {
   }
 
   void _loadItems() {
-    final section =
-        _compartments.isNotEmpty ? _compartments[_currentCompartment] : '';
-    _itemsFuture = _fetchItemsFromServer(
-      fridge: _selectedFridge,
-      compartment: section,
-    );
+    _itemsFuture = _fetchItemsFromServer(fridge: _selectedFridge);
     setState(() {});
   }
 
   Future<List<FridgeItem>> _fetchItemsFromServer({
     required String fridge,
-    required String compartment,
   }) async {
     final uri = Uri.parse(
       '${ApiConfig.baseUrl}/ingredients?user_id=${widget.userId}',
@@ -190,134 +239,205 @@ class _ManagePageState extends State<ManagePage> {
     final response = await http.delete(uri);
     if (response.statusCode == 200) {
       _loadItems();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('삭제 실패: ${response.statusCode}')),
+      );
     }
   }
 
-  Widget _buildImage(String imageUrl) {
-    // 만약 imageUrl이 상대 경로로 오면, 전체 URL로 변환
+  Widget _buildImage(String imageUrl,
+      {double width = 100, double height = 100}) {
     const baseUrl = '${ApiConfig.baseUrl}';
+    final fullUrl =
+        imageUrl.startsWith('http') ? imageUrl : '$baseUrl$imageUrl';
 
-    final fullUrl = imageUrl.startsWith('http')
-        ? imageUrl
-        : '$baseUrl$imageUrl'; // 상대 경로 처리
-
-    return Image.network(
-      fullUrl,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return const Icon(Icons.broken_image);
-      },
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return const Center(child: CircularProgressIndicator());
-      },
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Image.network(
+        fullUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.broken_image);
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
     );
   }
 
+  Map<String, CompRange> _computeCompartmentRanges(String fridgeName) {
+    final layout = fridgeLayouts[fridgeName];
+    final ranges = <String, CompRange>{};
+    if (layout == null) return ranges;
+    int start = 1;
+    layout.forEach((compartment, cfg) {
+      final int count = cfg.rows * cfg.cols;
+      final end = start + count - 1;
+      ranges[compartment] = CompRange(start, end);
+      start = end + 1;
+    });
+    return ranges;
+  }
+
+  Future<void> _handleDrop(FridgeItem draggedItem, int newAreaId) async {
+    final oldArea = draggedItem.area_id;
+    setState(() {
+      draggedItem.area_id = newAreaId;
+    });
+
+    final data = {
+      "user_id": draggedItem.user_id,
+      "ingredient_name": draggedItem.alias,
+      "quantity": draggedItem.quantity,
+      "purchase_date": draggedItem.purchase_date,
+      "expiration_date": draggedItem.expiration_date,
+      "alias": draggedItem.alias,
+      "area_id": newAreaId,
+      "image": draggedItem.imageUrl,
+      "note": draggedItem.memo,
+      "fridge_id": draggedItem.fridge_id,
+    };
+
+    final uri = Uri.parse(
+        '${ApiConfig.baseUrl}/ingredients/${draggedItem.ingredient_id}');
+    final res = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(data),
+    );
+
+    if (res.statusCode == 200) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('이동 저장 완료')));
+      _loadItems();
+    } else {
+      setState(() {
+        draggedItem.area_id = oldArea;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('이동 저장 실패: ${res.statusCode} ${res.body}')),
+      );
+    }
+  }
+
   Widget _buildPartitionWithItems(List<FridgeItem> items) {
-    final config =
-        fridgeLayouts[_selectedFridge]?[_compartments[_currentCompartment]];
+    final compartmentName =
+        _compartments.isNotEmpty ? _compartments[_currentCompartment] : '';
+    if (compartmentName.isEmpty) return const SizedBox.shrink();
+
+    final config = fridgeLayouts[_selectedFridge]?[compartmentName];
     if (config == null) return const SizedBox.shrink();
 
     const spacing = 12.0;
     const borderWidth = 3.0;
 
-    //  현재 냉장고와 현재 섹션(area)에 해당하는 아이템만 필터링
-    final filteredItems = items.where((item) {
-      final itemFridgeName = fridgeIdToName[item.fridge_id];
-      return itemFridgeName == _selectedFridge &&
-          item.area_id == _currentCompartment + 1;
-    }).toList();
+    final fridgeId = fridgeIdToName.entries
+        .firstWhere((e) => e.value == _selectedFridge)
+        .key;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final totalH = constraints.maxHeight;
-        final cellH = (totalH - (config.rows - 1) * spacing - 2 * borderWidth) /
-            config.rows;
+    final ranges = _computeCompartmentRanges(_selectedFridge);
+    final compRange = ranges[compartmentName];
+    if (compRange == null) return const SizedBox.shrink();
 
-        // 최대 3개씩 묶어서 그룹화
-        final groupedItems = <List<FridgeItem>>[];
-        for (var i = 0; i < filteredItems.length; i += 3) {
-          groupedItems.add(filteredItems.sublist(
-            i,
-            i + 3 > filteredItems.length ? filteredItems.length : i + 3,
-          ));
+    final int cellCount = config.rows * config.cols;
+
+    final cells = List<List<FridgeItem>>.generate(cellCount, (_) => []);
+    for (final item in items) {
+      if (item.fridge_id == fridgeId && compRange.contains(item.area_id)) {
+        final idx = compRange.indexOf(item.area_id);
+        if (idx >= 0 && idx < cellCount) {
+          cells[idx].add(item);
         }
+      }
+    }
 
-        return GridView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: config.cols,
-            crossAxisSpacing: spacing,
-            mainAxisSpacing: spacing,
-            mainAxisExtent: cellH,
-          ),
-          itemCount: config.rows * config.cols,
-          itemBuilder: (context, idx) {
-            final group = idx < groupedItems.length ? groupedItems[idx] : [];
+    return LayoutBuilder(builder: (context, constraints) {
+      final totalH = constraints.maxHeight;
+      final cellH = (totalH - (config.rows - 1) * spacing - 2 * borderWidth) /
+          config.rows;
 
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(
-                  color: Colors.grey.shade400,
-                  width: borderWidth,
+      return GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: config.cols,
+          crossAxisSpacing: spacing,
+          mainAxisSpacing: spacing,
+          mainAxisExtent: cellH,
+        ),
+        itemCount: cellCount,
+        itemBuilder: (context, idx) {
+          final cellItems = cells[idx];
+
+          return DragTarget<FridgeItem>(
+            onWillAccept: (data) => true,
+            onAccept: (draggedItem) {
+              final newAreaId = compRange.start + idx;
+              _handleDrop(draggedItem, newAreaId);
+            },
+            builder: (context, candidateData, rejectedData) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                    color: Colors.grey.shade400,
+                    width: borderWidth,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.all(6),
-              child: Row(
-                children: group.map((item) {
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: AspectRatio(
-                        aspectRatio: 1, // 너비 = 높이 비율(정사각형)
-                        child: GestureDetector(
-                          onTap: () => _showItemDetailDialog(item),
-                          child: DragTarget<FridgeItem>(
-                            onAccept: (draggedItem) {
-                              setState(() {
-                                draggedItem.area_id = _currentCompartment + 1;
-                              });
-                            },
-                            builder: (context, candidateData, rejectedData) {
-                              return Draggable<FridgeItem>(
-                                data: item,
-                                onDragCompleted: () {
-                                  // Handle drag completion if needed
-                                },
-                                feedback: Material(
-                                  color: Colors.transparent,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: SizedBox(
-                                      width: 100, // 원하는 크기로 설정
-                                      height: 100, // 원하는 크기로 설정
-                                      child: _buildImage(item.imageUrl),
-                                    ),
-                                  ),
-                                ),
-                                childWhenDragging:
-                                    Container(), // What to show when dragging
+                padding: const EdgeInsets.all(6),
+                child: cellItems.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add_box_outlined,
+                                size: 28, color: Colors.grey.shade500),
+                            const SizedBox(height: 4),
+                            Text(
+                              '빈칸\n(area ${compRange.start + idx})',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: cellItems.map((item) {
+                          return GestureDetector(
+                            onTap: () => _showItemDetailDialog(item),
+                            child: Draggable<FridgeItem>(
+                              data: item,
+                              feedback: Material(
+                                color: Colors.transparent,
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(6),
-                                  child: _buildImage(item.imageUrl),
+                                  child: _buildImage(item.imageUrl,
+                                      width: 50, height: 50),
                                 ),
-                              );
-                            },
-                          ),
-                        ),
+                              ),
+                              childWhenDragging: Container(),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: _buildImage(item.imageUrl,
+                                    width: 50, height: 50),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            );
-          },
-        );
-      },
-    );
+              );
+            },
+          );
+        },
+      );
+    });
   }
 
   @override
@@ -340,11 +460,12 @@ class _ManagePageState extends State<ManagePage> {
               ),
               items: _fridges
                   .map((f) => DropdownMenuItem(
-                      value: f,
-                      child: Text(
-                        f,
-                        overflow: TextOverflow.ellipsis,
-                      )))
+                        value: f,
+                        child: Text(
+                          f,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ))
                   .toList(),
               value: _selectedFridge,
               onChanged: (v) {
@@ -422,20 +543,23 @@ class _ManagePageState extends State<ManagePage> {
     );
   }
 
-  /// 선택된 식재료 정보 수정/삭제 다이얼로그
   void _showItemDetailDialog(FridgeItem item) {
     final aliasCtrl =
         TextEditingController(text: utf8.decode(item.alias.codeUnits));
-    final nameCtrl = TextEditingController(text: item.user_id);
     final qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final categoryCtrl = TextEditingController(text: '');
     final boughtCtrl =
         TextEditingController(text: utf8.decode(item.purchase_date.codeUnits));
     final expireCtrl = TextEditingController(
         text: utf8.decode(item.expiration_date.codeUnits));
     final memoCtrl =
         TextEditingController(text: utf8.decode(item.memo.codeUnits));
-    final areaCtrl = TextEditingController(text: '');
+
+    // 현재 냉장고의 구획 이름 목록
+    final compartmentNames = fridgeLayoutsNames[_selectedFridge] ?? [];
+    // 현재 area_id에 맞는 index 선택
+    int currentIndex = item.area_id - 1;
+
+    int selectedIndex = currentIndex;
 
     showDialog(
       context: context,
@@ -469,6 +593,24 @@ class _ManagePageState extends State<ManagePage> {
                   controller: memoCtrl,
                   decoration: const InputDecoration(labelText: '메모'),
                   maxLines: 2),
+              const SizedBox(height: 12),
+              // 위치 변경용 Dropdown
+              DropdownButtonFormField<int>(
+                decoration: const InputDecoration(
+                  labelText: '위치 변경',
+                  border: OutlineInputBorder(),
+                ),
+                value: selectedIndex,
+                items: List.generate(compartmentNames.length, (index) {
+                  return DropdownMenuItem(
+                    value: index,
+                    child: Text(compartmentNames[index]),
+                  );
+                }),
+                onChanged: (v) {
+                  if (v != null) selectedIndex = v;
+                },
+              ),
             ],
           ),
         ),
@@ -482,7 +624,9 @@ class _ManagePageState extends State<ManagePage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              // TODO: 서버에 업데이트 API 호출 (_updateItemOnServer)
+              // area_id는 선택된 index + 1
+              final newAreaId = selectedIndex + 1;
+
               final data = {
                 "user_id": item.user_id,
                 "ingredient_name": aliasCtrl.text,
@@ -490,13 +634,28 @@ class _ManagePageState extends State<ManagePage> {
                 "purchase_date": boughtCtrl.text,
                 "expiration_date": expireCtrl.text,
                 "alias": aliasCtrl.text,
-                "area_id": item.area_id,
+                "area_id": newAreaId,
                 "image": item.imageUrl,
                 "note": memoCtrl.text,
                 "fridge_id": item.fridge_id,
               };
 
-              await _updateItemOnServer(item, data);
+              final uri = Uri.parse(
+                  '${ApiConfig.baseUrl}/ingredients/${item.ingredient_id}');
+              final res = await http.put(
+                uri,
+                headers: {'Content-Type': 'application/json'},
+                body: json.encode(data),
+              );
+
+              if (res.statusCode == 200) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('수정 성공!')));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('수정 실패 ${res.statusCode} ${res.body}')));
+              }
+
               Navigator.of(context).pop();
               _loadItems();
             },
@@ -505,22 +664,5 @@ class _ManagePageState extends State<ManagePage> {
         ],
       ),
     );
-  }
-
-  /// 서버에 PATCH 요청으로 아이템 정보 업데이트
-  Future<void> _updateItemOnServer(
-      FridgeItem item, Map<String, dynamic> data) async {
-    final uri =
-        Uri.parse('${ApiConfig.baseUrl}/ingredients/${item.ingredient_id}');
-    final res = await http.put(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(data),
-    );
-    if (res.statusCode == 200) {
-      showSnackBar(context, const Text('수정 성공!'));
-    } else {
-      showSnackBar(context, new Text('수정 실패 ${res.statusCode} ${res.body}'));
-    }
   }
 }
