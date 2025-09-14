@@ -49,43 +49,43 @@ const Map<String, Map<String, GridConfig>> fridgeLayouts = {
 
 const Map<String, List<String>> fridgeLayoutsNames = {
   'SAMSUNG BESPOKE 냉장고 2도어 키친핏 333L': [
-    '냉장실 1층',
-    '냉장실 2층',
-    '냉장실 3층',
-    '냉장실 4층',
     '냉장실 5층',
-    '냉동실 1층',
-    '냉동실 2층',
+    '냉장실 4층',
+    '냉장실 3층',
+    '냉장실 2층',
+    '냉장실 1층',
     '냉동실 3층',
-    '냉장실 문칸 1층',
-    '냉장실 문칸 2층',
+    '냉동실 2층',
+    '냉동실 1층',
     '냉장실 문칸 3층',
+    '냉장실 문칸 2층',
+    '냉장실 문칸 1층',
   ],
   'LG 모던엣지 냉장고 462L': [
-    '냉장실 1층',
-    '냉장실 2층',
-    '냉장실 3층',
-    '냉장실 4층',
     '냉장실 5층',
-    '냉동실 1층',
-    '냉동실 2층',
+    '냉장실 4층',
+    '냉장실 3층',
+    '냉장실 2층',
+    '냉장실 1층',
     '냉동실 3층',
-    '냉장실 문칸 1층 왼',
-    '냉장실 문칸 2층 왼',
-    '냉장실 문칸 3층 왼',
+    '냉동실 2층',
+    '냉동실 1층',
     '냉장실 문칸 4층 왼',
-    '냉장실 문칸 1층 오',
-    '냉장실 문칸 2층 오',
-    '냉장실 문칸 3층 오',
     '냉장실 문칸 4층 오',
+    '냉장실 문칸 3층 왼',
+    '냉장실 문칸 3층 오',
+    '냉장실 문칸 2층 왼',
+    '냉장실 문칸 2층 오',
+    '냉장실 문칸 1층 왼',
+    '냉장실 문칸 1층 오',
   ],
   '신규 냉장고': [
-    '냉장실 1층 왼',
     '냉장실 2층 왼',
-    '냉장실 1층 오',
     '냉장실 2층 오',
-    '냉동실 1층',
+    '냉장실 1층 왼',
+    '냉장실 1층 오',
     '냉동실 2층',
+    '냉동실 1층',
     '문칸 상단 왼',
     '문칸 상단 오',
     '문칸 하단 왼',
@@ -226,7 +226,8 @@ class _ManagePageState extends State<ManagePage> {
     );
     final response = await http.get(uri);
     if (response.statusCode == 200) {
-      final List data = json.decode(response.body);
+      final decoded = utf8.decode(response.bodyBytes);
+      final List<dynamic> data = json.decode(decoded);
       return data.map((e) => FridgeItem.fromJson(e)).toList();
     }
     return [];
@@ -304,10 +305,13 @@ class _ManagePageState extends State<ManagePage> {
 
     final uri = Uri.parse(
         '${ApiConfig.baseUrl}/ingredients/${draggedItem.ingredient_id}');
+    final bodyBytes = utf8.encode(json.encode(data));
     final res = await http.put(
       uri,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(data),
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      body: bodyBytes, // <-- String 대신 UTF-8 바이트 배열 전달
     );
 
     if (res.statusCode == 200) {
@@ -544,15 +548,11 @@ class _ManagePageState extends State<ManagePage> {
   }
 
   void _showItemDetailDialog(FridgeItem item) {
-    final aliasCtrl =
-        TextEditingController(text: utf8.decode(item.alias.codeUnits));
+    final aliasCtrl = TextEditingController(text: item.alias);
     final qtyCtrl = TextEditingController(text: item.quantity.toString());
-    final boughtCtrl =
-        TextEditingController(text: utf8.decode(item.purchase_date.codeUnits));
-    final expireCtrl = TextEditingController(
-        text: utf8.decode(item.expiration_date.codeUnits));
-    final memoCtrl =
-        TextEditingController(text: utf8.decode(item.memo.codeUnits));
+    final boughtCtrl = TextEditingController(text: item.purchase_date);
+    final expireCtrl = TextEditingController(text: item.expiration_date);
+    final memoCtrl = TextEditingController(text: item.memo);
 
     // 현재 냉장고의 구획 이름 목록
     final compartmentNames = fridgeLayoutsNames[_selectedFridge] ?? [];
@@ -642,10 +642,13 @@ class _ManagePageState extends State<ManagePage> {
 
               final uri = Uri.parse(
                   '${ApiConfig.baseUrl}/ingredients/${item.ingredient_id}');
+              final bodyBytes = utf8.encode(json.encode(data));
               final res = await http.put(
                 uri,
-                headers: {'Content-Type': 'application/json'},
-                body: json.encode(data),
+                headers: {
+                  'Content-Type': 'application/json; charset=utf-8',
+                },
+                body: bodyBytes, // <-- String 대신 UTF-8 바이트 배열 전달
               );
 
               if (res.statusCode == 200) {
