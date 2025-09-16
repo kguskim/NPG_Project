@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yolo/chatbot_page.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
 import 'package:yolo/login_page.dart';
 import 'package:yolo/manage.dart';
@@ -13,7 +14,6 @@ import 'package:http/http.dart' as http;
 import 'package:yolo/detailed_recipe.dart';
 import 'widgets/to_buy_section.dart';
 import 'models/today_recipe_model.dart';
-import 'today_detailed_recipe.dart';
 import 'package:yolo/config/constants.dart';
 
 /// 공지사항 모델
@@ -89,25 +89,25 @@ Future<TodayRecipeModel> fetchTodayRecipe(String userId) async {
   //  URL 구성: baseUrl + '/recipes/recommend/today' + userId 쿼리 파라미터
   final uri = Uri.parse('${ApiConfig.baseUrl}/recipes/recommend/today');
   // 2) GET 요청 보내기
-   final response = await http.get(
-     uri,
-     headers: {
-       'Content-Type': 'application/json',
-       // 필요하다면 Authorization 등 헤더 추가
-     },
-   );
+  final response = await http.get(
+    uri,
+    headers: {
+      'Content-Type': 'application/json',
+      // 필요하다면 Authorization 등 헤더 추가
+    },
+  );
   // 3) 응답 상태 코드 확인
-   if (response.statusCode == 200) {
-     // 4) 응답 본문을 JSON 파싱 후 TodayRecipeModel 생성
-     final Map<String, dynamic> jsonMap = jsonDecode(utf8.decode(response.bodyBytes));
-     return TodayRecipeModel.fromJson(jsonMap);
-   } else {
-     // 에러가 났다면 예외 던지기
-     throw Exception('오늘의 메뉴를 불러오는 데 실패했습니다 (status: ${response.statusCode})');
-   }
-
-
+  if (response.statusCode == 200) {
+    // 4) 응답 본문을 JSON 파싱 후 TodayRecipeModel 생성
+    final Map<String, dynamic> jsonMap =
+        jsonDecode(utf8.decode(response.bodyBytes));
+    return TodayRecipeModel.fromJson(jsonMap);
+  } else {
+    // 에러가 났다면 예외 던지기
+    throw Exception('오늘의 메뉴를 불러오는 데 실패했습니다 (status: ${response.statusCode})');
+  }
 }
+
 /// 공지사항 가져오는 함수
 Future<List<Post>> fetchAnnouncements() async {
   final uri = Uri.parse('${ApiConfig.baseUrl}/notice');
@@ -122,16 +122,17 @@ Future<List<Post>> fetchAnnouncements() async {
   if (response.statusCode == 200) {
     // 서버에서 [{id:1, title:"...", date:"2025-06-09T10:00:00Z"}, ...] 형태로 내려온다고 가정
     final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-    return data.map((e) => Post(
-      id: e['id'] as int,
-      title: e['title'] as String,
-      date: DateTime.parse(e['date'] as String),
-    )).toList();
+    return data
+        .map((e) => Post(
+              id: e['id'] as int,
+              title: e['title'] as String,
+              date: DateTime.parse(e['date'] as String),
+            ))
+        .toList();
   } else {
     throw Exception('공지사항을 불러오는 데 실패했습니다 (status: ${response.statusCode})');
   }
 }
-
 
 class HomePage extends StatefulWidget {
   final String userId;
@@ -330,7 +331,8 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           // 공지사항
                           Expanded(
-                            child: Container( // Container로 감싸서 스타일 적용
+                            child: Container(
+                              // Container로 감싸서 스타일 적용
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -376,20 +378,21 @@ class _HomePageState extends State<HomePage> {
                                                 onTap: () => Navigator.push(
                                                   ctx,
                                                   MaterialPageRoute(
-                                                      builder: (_) => NoticeBoard(
-                                                          noticeId: p.id)),
+                                                      builder: (_) =>
+                                                          NoticeBoard(
+                                                              noticeId: p.id)),
                                                 ),
                                                 child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                          vertical: 4.0),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 4.0),
                                                   child: Text(
                                                     p.title,
                                                     style: const TextStyle(
                                                         decoration:
                                                             TextDecoration.none,
                                                         color: Colors.black),
-                                                    overflow: TextOverflow.ellipsis, // 글자가 길면 ... 처리
+                                                    overflow: TextOverflow
+                                                        .ellipsis, // 글자가 길면 ... 처리
                                                   ),
                                                 ),
                                               ),
@@ -502,6 +505,17 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const ChatBotPage()), // 채팅 페이지로 이동
+          );
+        },
+        backgroundColor: Colors.blue, // 버튼 색
+        child: const Icon(Icons.chat), // 채팅 아이콘
+      ),
     );
   }
 }
@@ -520,7 +534,8 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container( // GestureDetector의 유일한 child
+      child: Container(
+        // GestureDetector의 유일한 child
         // 아이콘 사이즈 고정
         width: 95,
         padding: const EdgeInsets.symmetric(vertical: 16),

@@ -1,5 +1,5 @@
 // lib/config/constants.dart
 class ApiConfig {
   static const String baseUrl =
-      'https://anyway-lived-lender-var.trycloudflare.com'; // 맨 뒤에 슬래시 안 빼면 로그인 안됨
+      'https://lounge-value-rough-sauce.trycloudflare.com'; // 맨 뒤에 슬래시 안 빼면 로그인 안됨
 }
