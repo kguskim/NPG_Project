@@ -510,7 +510,8 @@ class _HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (_) => const ChatBotPage()), // 채팅 페이지로 이동
+              builder: (_) => ChatBotPage(userId: widget.userId), // ✅ const 제거
+            ),
           );
         },
         backgroundColor: Colors.blue, // 버튼 색

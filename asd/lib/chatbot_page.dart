@@ -1,7 +1,12 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'models/recipe_model.dart';
+import 'recipe.dart'; // ✅ fetchUserRecipes 가져오기
+import 'detailed_recipe.dart';
 
 class ChatBotPage extends StatefulWidget {
-  const ChatBotPage({super.key});
+  final String userId; // ✅ userId 필요
+  const ChatBotPage({super.key, required this.userId});
 
   @override
   State<ChatBotPage> createState() => _ChatBotPageState();
@@ -13,23 +18,55 @@ class _ChatBotPageState extends State<ChatBotPage> {
   ];
   final TextEditingController _controller = TextEditingController();
 
-  void _sendMessage() {
+  void _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
+    final userInput = _controller.text.trim();
+
     setState(() {
-      _messages.add({
-        "text": _controller.text.trim(),
-        "isMe": true,
-      });
+      _messages.add({"text": userInput, "isMe": true});
       _controller.clear();
     });
 
-    // TODO: 챗봇 로직 추가 (AI 응답 등)
+    if (userInput == "레시피 추천") {
+      try {
+        setState(() {
+          _messages.add({"text": "추천 레시피를 표시합니다.", "isMe": false});
+        });
+
+        // ✅ 서버에서 추천 레시피 3개 가져오기
+        final recipes = await fetchUserRecipes(widget.userId);
+        if (recipes.isNotEmpty) {
+          final random = Random();
+          final recipe = recipes[random.nextInt(recipes.length)];
+
+          // ✅ 상세 레시피 페이지로 이동
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DetailedRecipePage(
+                imageUrls: recipe.stepImages,
+                steps: recipe.stepDetails,
+              ),
+            ),
+          );
+          return;
+        } else {
+          setState(() {
+            _messages.add({"text": "추천 레시피가 없습니다.", "isMe": false});
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _messages.add({"text": "레시피 불러오기 실패: $e", "isMe": false});
+        });
+      }
+      return;
+    }
+
+    // 기본 응답
     Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
-        _messages.add({
-          "text": "제가 도와드릴게요!",
-          "isMe": false,
-        });
+        _messages.add({"text": "죄송하지만 이해하지 못했어요.", "isMe": false});
       });
     });
   }
@@ -79,6 +116,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
                       hintText: "메시지를 입력하세요...",
                       border: InputBorder.none,
                     ),
+                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
                 IconButton(
