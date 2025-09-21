@@ -313,7 +313,7 @@ class InsertPageState extends State<InsertPage> {
       "fridge_id": fridgeId,
     };
 
-    showSnackBar(context, Text(data.toString()));
+   // showSnackBar(context, Text(data.toString()));
 
     final resp = await http.post(
       Uri.parse("${ApiConfig.baseUrl}/ingredients"),

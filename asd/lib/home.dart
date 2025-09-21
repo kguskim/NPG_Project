@@ -2,7 +2,7 @@
 import 'dart:math';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart'; // 더 이상 사용하지 않으므로 주석 처리 또는 삭제 가능
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yolo/chatbot_page.dart';
 import 'package:yolo/food_ingredient_detection_page.dart';
@@ -15,6 +15,27 @@ import 'package:yolo/detailed_recipe.dart';
 import 'widgets/to_buy_section.dart';
 import 'models/today_recipe_model.dart';
 import 'package:yolo/config/constants.dart';
+
+// [✅ 추가] 소비기한 임박 식재료 모델
+class ExpiringIngredient {
+  final String name;
+  final int daysLeft; // 남은 일수
+
+  ExpiringIngredient({required this.name, required this.daysLeft});
+
+  // API 응답(JSON)으로부터 ExpiringIngredient 객체를 생성하는 팩토리 생성자
+  factory ExpiringIngredient.fromJson(Map<String, dynamic> json) {
+    // API 응답에 'expire_date' 필드가 'YYYY-MM-DD' 형식으로 온다고 가정
+    final expireDate = DateTime.parse(json['expire_date'] as String);
+    // 현재 날짜와 소비기한 날짜의 차이를 계산
+    final daysLeft = expireDate.difference(DateTime.now()).inDays;
+
+    return ExpiringIngredient(
+      name: json['ingredient_name'] as String,
+      daysLeft: daysLeft,
+    );
+  }
+}
 
 /// 공지사항 모델
 class Post {
@@ -58,8 +79,9 @@ class DataService {
   }
 }
 
-/// 만료 알림을 가져오는 API 호출 함수
-Future<String> fetchExpireNotice(String userId, int days) async {
+// [🔄 수정] 소비기한 임박 식재료 목록을 가져오는 API 호출 함수
+Future<List<ExpiringIngredient>> fetchExpiringIngredients(
+    String userId, int days) async {
   final uri = Uri.parse(
     '${ApiConfig.baseUrl}/ingredients'
     '?user_id=${Uri.encodeComponent(userId)}'
@@ -71,16 +93,10 @@ Future<String> fetchExpireNotice(String userId, int days) async {
 
   if (res.statusCode == 200) {
     final List<dynamic> data = jsonDecode(utf8.decode(res.bodyBytes));
-    if (data.isEmpty) {
-      return '소비기한 임박한 식재료가 없습니다.';
-    }
-    // 3개까지만 보여주고 나머지는 개수 표기
-    final names = data.map((e) => e['ingredient_name'] as String).toList();
-    final firstThree = names.take(3).join(', ');
-    final more = names.length > 3 ? ' 등 ${names.length}개' : '';
-    return '$firstThree$more 이 곧 만료됩니다.';
+    // 각 JSON 객체를 ExpiringIngredient 모델로 변환하여 리스트로 반환
+    return data.map((json) => ExpiringIngredient.fromJson(json)).toList();
   } else {
-    throw Exception('만료 알림 불러오기 실패 (${res.statusCode})');
+    throw Exception('소비기한 임박 식재료 불러오기 실패 (${res.statusCode})');
   }
 }
 
@@ -146,7 +162,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future<List<Post>> _postsFuture;
   late Future<TodayRecipeModel> _todayFuture;
-  late Future<String> _noticeFuture;
+  // [🔄 수정] Future<String> -> Future<List<ExpiringIngredient>>
+  late Future<List<ExpiringIngredient>> _expiringIngredientsFuture;
   late Future<Menu> _menuFuture;
   List<String> _toBuy = [];
 
@@ -154,8 +171,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadToBuy();
-    // 만료 알림, 공지, 메뉴를 동시에 초기화
-    _noticeFuture = fetchExpireNotice(widget.userId, 7);
+    // [🔄 수정] fetchExpireNotice -> fetchExpiringIngredients 호출
+    _expiringIngredientsFuture = fetchExpiringIngredients(widget.userId, 7);
     _postsFuture = DataService.fetchLatestPosts(4);
     _menuFuture = DataService.getTodayMenu();
     _todayFuture = fetchTodayRecipe(widget.userId);
@@ -211,7 +228,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final nowTxt = DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
+    // [❌ 삭제] final nowTxt = DateFormat('EEEE d MMMM y HH:mm').format(DateTime.now());
 
     return Scaffold(
       appBar: AppBar(
@@ -253,27 +270,89 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── 만료 알림 영역 ──
+            // [🔄 수정] 만료 알림 영역 UI 전체 변경
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: FutureBuilder<String>(
-                future: _noticeFuture,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: FutureBuilder<List<ExpiringIngredient>>(
+                future: _expiringIngredientsFuture,
                 builder: (ctx, snap) {
-                  String notice;
-                  if (snap.connectionState != ConnectionState.done) {
-                    notice = '알림 로딩 중...';
-                  } else if (snap.hasError) {
-                    notice = '알림 불러오기 실패';
-                  } else {
-                    notice = snap.data!;
+                  // 로딩 중일 때
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
                   }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(notice, style: const TextStyle(fontSize: 14)),
-                      const SizedBox(height: 8),
-                      Text(nowTxt, style: const TextStyle(fontSize: 16)),
-                    ],
+                  // 에러가 발생했을 때
+                  if (snap.hasError) {
+                    return Text('알림을 불러오는 중 오류가 발생했습니다.',
+                        style: TextStyle(color: Colors.red.shade700));
+                  }
+                  // 데이터가 없거나 비어있을 때
+                  final ingredients = snap.data;
+                  if (ingredients == null || ingredients.isEmpty) {
+                    return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(8)),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.check_circle_outline,
+                                color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('소비기한이 임박한 식재료가 없습니다.'),
+                          ],
+                        ));
+                  }
+
+                  // 데이터가 있을 때 상세 UI 표시
+                  return Container(
+                    padding: const EdgeInsets.all(12.0),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded,
+                                color: Colors.orange, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              '소비기한 임박!',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepOrange),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // 식재료 목록 (최대 3개까지)
+                        ...ingredients.take(3).map((item) {
+                          final dDay = item.daysLeft <= 0
+                              ? '오늘까지!'
+                              : 'D-${item.daysLeft}';
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(left: 28.0, top: 4.0),
+                            child: Text(
+                              '• ${item.name}: $dDay',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          );
+                        }).toList(),
+                        // 3개보다 많으면 개수 표시
+                        if (ingredients.length > 3)
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 28.0, top: 4.0),
+                            child: Text('...외 ${ingredients.length - 3}개',
+                                style: const TextStyle(color: Colors.grey)),
+                          ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -408,6 +487,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           ),
+                          const SizedBox(width: 16), // 공지사항과 메뉴 사이 간격 추가
                           // ─── 오늘의 메뉴 영역 ───
                           Expanded(
                             child: Column(
@@ -455,12 +535,16 @@ class _HomePageState extends State<HomePage> {
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                             ),
-                                            child: Image.network(
-                                              today.imageUrl,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) =>
-                                                  const Icon(
-                                                      Icons.broken_image),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: Image.network(
+                                                today.imageUrl,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const Icon(
+                                                        Icons.broken_image),
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -480,12 +564,9 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                           ),
-
-                          const SizedBox(width: 16),
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 32),
                   ],
                 ),

@@ -38,7 +38,7 @@ class DatabaseHelper {
   // 샘플 데이터 추가 함수
   Future<void> _seedDatabase(Database db) async {
     await db.insert('ingredients', {'name': '사과', 'area_id': 'A-1 (과일 코너)'}, conflictAlgorithm: ConflictAlgorithm.ignore);
-    await db.insert('ingredients', {'name': '바나나', 'area_id': 'A-2 (수입 과일)'}, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await db.insert('ingredients', {'name': '바나나', 'area_id': '냉장실 1층 오른쪽'}, conflictAlgorithm: ConflictAlgorithm.ignore);
     await db.insert('ingredients', {'name': '돼지고기', 'area_id': 'C-4 (정육 코너)'}, conflictAlgorithm: ConflictAlgorithm.ignore);
     await db.insert('ingredients', {'name': '대파', 'area_id': 'B-3 (채소 코너)'}, conflictAlgorithm: ConflictAlgorithm.ignore);
     await db.insert('ingredients', {'name': '양파', 'area_id': 'B-3 (채소 코너)'}, conflictAlgorithm: ConflictAlgorithm.ignore);
