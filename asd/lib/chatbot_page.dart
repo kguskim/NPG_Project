@@ -15,7 +15,7 @@ class ChatBotPage extends StatefulWidget {
 
 class _ChatBotPageState extends State<ChatBotPage> {
   final List<Map<String, dynamic>> _messages = [
-    {"text": "안녕하세요! 무엇을 도와드릴까요?", "isMe": false},
+    {"text": "안녕하세요! 무엇을 도와드릴까요? ('레시피 추천' 또는 '사과는 어디에 있어?' 와 같이 질문해주세요", "isMe": false},
   ];
   final TextEditingController _controller = TextEditingController();
 
