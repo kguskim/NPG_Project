@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'models/recipe_model.dart';
 import 'recipe.dart'; // ✅ fetchUserRecipes 가져오기
 import 'detailed_recipe.dart';
+import 'database_helper.dart';
 
 class ChatBotPage extends StatefulWidget {
   final String userId; // ✅ userId 필요
