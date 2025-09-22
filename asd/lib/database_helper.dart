@@ -1,3 +1,4 @@
+// database_helper.dart
 // 챗봇 식재료 DB 연동 파일
 
 import 'package:path/path.dart';

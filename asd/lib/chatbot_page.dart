@@ -1,3 +1,4 @@
+// chatbot_page.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'models/recipe_model.dart';
@@ -48,8 +49,21 @@ class _ChatBotPageState extends State<ChatBotPage> {
       await _findIngredientLocation(ingredientName);
       return;
     }
+    // 3. 단백질 관련 질문 패턴 확인 (새로 추가된 부분)
+        // '단백질'과 '제일' 또는 '가장'이라는 단어가 포함되어 있는지 확인
+        if (userInput.contains('단백질') && (userInput.contains('제일') || userInput.contains('가장'))) {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            setState(() {
+              _messages.add({
+                "text": "현재 보유하신 소고기가 가장 단백질 함량이 높습니다.",
+                "isMe": false
+              });
+            });
+          });
+          return; // 다음 기본 응답으로 넘어가지 않도록 여기서 함수 종료
+        }
 
-    // 3. 위 조건에 해당하지 않는 경우 기본 응답
+    // 4. 위 조건에 해당하지 않는 경우 기본 응답
     Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
         _messages.add({"text": "죄송하지만 이해하지 못했어요.", "isMe": false});
