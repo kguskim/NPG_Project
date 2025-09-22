@@ -21,7 +21,6 @@ class LoginPage extends StatelessWidget {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'user_id': id, 'password': password}),
       );
-      showSnackBar(context, Text("환영합니다 " + id + "님"));
 
       if (response.statusCode == 200 && response.body == 'success') {
         Navigator.push(
@@ -29,6 +28,7 @@ class LoginPage extends StatelessWidget {
           MaterialPageRoute(
               builder: (BuildContext context) => HomePage(userId: id)),
         );
+        showSnackBar(context, Text("환영합니다 " + id + "님"));
       } else {
         showSnackBar(context, const Text('아이디와 비밀번호를 확인해 주세요.'));
       }
