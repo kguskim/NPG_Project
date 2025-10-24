@@ -116,18 +116,24 @@ class _YoloVideoState extends State<YoloVideo> with WidgetsBindingObserver {
               onPressed: () async {
                 final XFile imageFile = await controller.takePicture();
 
-                // YOLO 결과에서 첫 번째 태그 추출
-                final String firstTag = yoloResults.isNotEmpty
-                    ? yoloResults.map((result) => result['tag'] as String).first
-                    : "Unknown";
+                String topTag = "Unknown";
+                try {
+                  if (yoloResults.isNotEmpty) {
+                    final best = yoloResults.reduce((a, b) =>
+                        ((a["box"][4] ?? 0) > (b["box"][4] ?? 0)) ? a : b);
+                    topTag = best["tag"] as String? ?? "Unknown";
+                  }
+                } catch (_) {
+                  topTag = "Unknown";
+                }
 
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => InsertPage(
                       userId: widget.userId,
-                      data: firstTag,
-                      imagePath: imageFile.path, // File path 전달
+                      data: topTag,
+                      imagePath: imageFile.path,
                     ),
                   ),
                 );
@@ -212,24 +218,36 @@ class _YoloVideoState extends State<YoloVideo> with WidgetsBindingObserver {
 
   List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
     if (yoloResults.isEmpty) return [];
+
+    // 1️⃣ 가장 높은 정확도의 결과 하나만 추출
+    final topResult = yoloResults.reduce((a, b) {
+      // YOLO 플러그인에서는 box[4]가 confidence임
+      final confA = (a["box"][4] ?? 0).toDouble();
+      final confB = (b["box"][4] ?? 0).toDouble();
+      return confA > confB ? a : b;
+    });
+
+    // 2️⃣ 화면 비율 계산
     double factorX = screen.width / (cameraImage?.height ?? 1);
     double factorY = screen.height / (cameraImage?.width ?? 1);
 
+    // 3️⃣ 박스 색상
     Color colorPick = const Color.fromARGB(255, 50, 233, 30);
 
-    return yoloResults.map((result) {
-      return Positioned(
-        left: result["box"][0] * factorX,
-        top: result["box"][1] * factorY,
-        width: (result["box"][2] - result["box"][0]) * factorX,
-        height: (result["box"][3] - result["box"][1]) * factorY,
+    // 4️⃣ 해당 객체만 표시
+    return [
+      Positioned(
+        left: topResult["box"][0] * factorX,
+        top: topResult["box"][1] * factorY,
+        width: (topResult["box"][2] - topResult["box"][0]) * factorX,
+        height: (topResult["box"][3] - topResult["box"][1]) * factorY,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(10.0)),
             border: Border.all(color: Colors.pink, width: 2.0),
           ),
           child: Text(
-            "${result['tag']} ${(result['box'][4] * 100).toStringAsFixed(0)}%",
+            "${topResult['tag']} ${(topResult['box'][4] * 100).toStringAsFixed(0)}%",
             style: TextStyle(
               background: Paint()..color = colorPick,
               color: Colors.white,
@@ -237,8 +255,8 @@ class _YoloVideoState extends State<YoloVideo> with WidgetsBindingObserver {
             ),
           ),
         ),
-      );
-    }).toList();
+      ),
+    ];
   }
 
   void didChangeAppLifecycleState(AppLifecycleState state) async {
