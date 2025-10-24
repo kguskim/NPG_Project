@@ -9,7 +9,7 @@ late List<CameraDescription> cameras;
 
 class App extends StatelessWidget {
   final String userId;
-  const App({super.key,required this.userId});
+  const App({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -35,47 +35,48 @@ class YoloVideo extends StatefulWidget {
   State<YoloVideo> createState() => _YoloVideoState();
 }
 
-class _YoloVideoState extends State<YoloVideo> {
+class _YoloVideoState extends State<YoloVideo> with WidgetsBindingObserver {
   late CameraController controller;
-  late List<Map<String, dynamic>> yoloResults;
-  CameraImage? cameraImage;
+  late FlutterVision vision;
   bool isLoaded = false;
   bool isDetecting = false;
-
-  late FlutterVision vision; // YOLO
+  List<Map<String, dynamic>> yoloResults = [];
+  CameraImage? cameraImage;
 
   @override
   void initState() {
     super.initState();
-
-    vision = FlutterVision(); // YOLO
-
+    WidgetsBinding.instance.addObserver(this);
+    vision = FlutterVision();
     init();
   }
 
-  init() async {
-    cameras = await availableCameras();
-    controller =
-        CameraController(cameras[0], ResolutionPreset.max, enableAudio: false);
-    controller.initialize().then((value) {
-      loadYoloModel().then((value) {
-        setState(() {
-          isLoaded = true;
-          isDetecting = false;
-          yoloResults = [];
+  Future<void> init() async {
+    final cameras = await availableCameras();
 
-          startDetection();
-        });
-      });
+    controller = CameraController(
+      cameras[0],
+      ResolutionPreset.medium,
+      enableAudio: false,
+    );
+
+    await controller.initialize();
+    await loadYoloModel();
+
+    setState(() {
+      isLoaded = true;
     });
+
+    await startDetection();
   }
 
   @override
   void dispose() async {
-    vision.closeYoloModel(); // YOLO Stop
-
+    WidgetsBinding.instance.removeObserver(this);
+    await stopDetection();
+    await controller.dispose();
+    await vision.closeYoloModel();
     super.dispose();
-    controller.dispose();
   }
 
   @override
@@ -145,14 +146,12 @@ class _YoloVideoState extends State<YoloVideo> {
 
   Future<void> loadYoloModel() async {
     await vision.loadYoloModel(
-        labels: 'assets/labels.txt',
-        modelPath: 'assets/yolov5n.tflite',
-        modelVersion: "yolov5",
-        numThreads: 8,
-        useGpu: true);
-    setState(() {
-      isLoaded = true;
-    });
+      labels: 'assets/labels.txt',
+      modelPath: 'assets/yolov5n.tflite',
+      modelVersion: "yolov5",
+      numThreads: 4,
+      useGpu: true,
+    );
   }
 
   Future<void> yoloOnFrame(CameraImage cameraImage) async {
@@ -172,22 +171,39 @@ class _YoloVideoState extends State<YoloVideo> {
 
   // 객체 인식 시작
   Future<void> startDetection() async {
+    if (!controller.value.isInitialized) return;
+    if (controller.value.isStreamingImages) {
+      await controller.stopImageStream();
+    }
+
     setState(() {
       isDetecting = true;
     });
-    if (controller.value.isStreamingImages) {
-      return;
-    }
+
     await controller.startImageStream((image) async {
-      if (isDetecting) {
-        cameraImage = image;
-        yoloOnFrame(image);
+      if (!isDetecting) return;
+      cameraImage = image;
+      final results = await vision.yoloOnFrame(
+        bytesList: image.planes.map((plane) => plane.bytes).toList(),
+        imageHeight: image.height,
+        imageWidth: image.width,
+        iouThreshold: 0.4,
+        confThreshold: 0.4,
+        classThreshold: 0.5,
+      );
+
+      if (mounted && results.isNotEmpty) {
+        setState(() {
+          yoloResults = results;
+        });
       }
     });
   }
 
-  // 객체 인식 종료
   Future<void> stopDetection() async {
+    if (controller.value.isStreamingImages) {
+      await controller.stopImageStream();
+    }
     setState(() {
       isDetecting = false;
       yoloResults.clear();
@@ -223,5 +239,22 @@ class _YoloVideoState extends State<YoloVideo> {
         ),
       );
     }).toList();
+  }
+
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (!mounted) return;
+
+    if (state == AppLifecycleState.resumed) {
+      // 다시 들어왔을 때 YOLO 재시작
+      if (!controller.value.isInitialized) {
+        await controller.initialize();
+      }
+      if (!controller.value.isStreamingImages) {
+        await startDetection();
+      }
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      await stopDetection();
+    }
   }
 }
