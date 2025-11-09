@@ -1,10 +1,11 @@
-// chatbot_page.dart
-import 'dart:math';
+// ✅ 'dart:convert', 'http', 'constants'를 import 합니다.
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'models/recipe_model.dart';
-import 'recipe.dart';
-import 'detailed_recipe.dart';
-import 'database_helper.dart'; // ✅ 1. 데이터베이스 헬퍼 import 추가
+import 'package:http/http.dart' as http;
+import 'package:yolo/config/constants.dart'; // ApiConfig를 사용하기 위해 import
+
+import 'chatbot_service.dart'; // 챗봇 서비스
+// ❌ 'database_helper.dart'는 더 이상 필요 없습니다.
 
 class ChatBotPage extends StatefulWidget {
   final String userId;
@@ -16,132 +17,79 @@ class ChatBotPage extends StatefulWidget {
 
 class _ChatBotPageState extends State<ChatBotPage> {
   final List<Map<String, dynamic>> _messages = [
-    // ✅ 2. 초기 안내 메시지 수정
     {
-      "text": "안녕하세요! '레시피 추천' 또는 '사과는 어디에 있어?' 와 같이 질문해주세요.",
+      "text": "안녕하세요! 재고 기반으로 레시피 추천, 재료 위치 찾기 등이 가능합니다.",
       "isMe": false
     },
   ];
   final TextEditingController _controller = TextEditingController();
+  final ChatbotService _chatbotService = ChatbotService();
+  bool _isLoading = false;
 
-  // ✅ 3. 메시지 전송 로직 전체를 새롭게 교체
+  // ✅ [수정됨] 로컬 DB(_getLocalIngredients) 대신
+  //          서버 API(_getServerIngredients)에서 재고를 가져오는 함수
+  Future<List<Map<String, dynamic>>> _getServerIngredients(String userId) async {
+    // manage.dart와 동일하게 ApiConfig.baseUrl을 사용합니다.
+    final uri = Uri.parse(
+      '${ApiConfig.baseUrl}/ingredients?user_id=${widget.userId}',
+    );
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final decoded = utf8.decode(response.bodyBytes);
+        final List<dynamic> data = json.decode(decoded);
+
+        // AI가 JSON을 직접 처리할 수 있도록 List<Map<String, dynamic>>으로 반환
+        return data.map((e) => e as Map<String, dynamic>).toList();
+      }
+      return []; // 서버가 200이 아니면 빈 리스트 반환
+    } catch (e) {
+      throw Exception('서버에서 식재료를 불러올 수 없습니다: $e');
+    }
+  }
+
+  // ✅ [수정됨] _getServerIngredients를 호출하도록 변경
   void _sendMessage() async {
-    if (_controller.text.trim().isEmpty) return;
+    if (_controller.text.trim().isEmpty || _isLoading) return;
     final userInput = _controller.text.trim();
 
     setState(() {
       _messages.add({"text": userInput, "isMe": true});
+      _isLoading = true;
+      _messages.add({"text": "...", "isMe": false});
       _controller.clear();
     });
 
-    // 1. "레시피 추천" 기능
-    if (userInput == "레시피 추천") {
-      await _recommendRecipe();
-      return;
-    }
-
-    // 2. "00은/는 어디에 있어?" 질문 패턴 확인
-    final RegExp regExp = RegExp(r"(.+?)(은|는)\s+어디에\s?(있어|있나요|있어요)\??$");
-    final Match? match = regExp.firstMatch(userInput);
-
-    if (match != null) {
-      final ingredientName = match.group(1)!;
-      await _findIngredientLocation(ingredientName);
-      return;
-    }
-    // 3. 단백질 관련 질문 패턴 확인 (새로 추가된 부분)
-        // '단백질'과 '제일' 또는 '가장'이라는 단어가 포함되어 있는지 확인
-        if (userInput.contains('단백질') && (userInput.contains('제일') || userInput.contains('가장'))) {
-          Future.delayed(const Duration(milliseconds: 500), () {
-            setState(() {
-              _messages.add({
-                "text": "현재 보유하신 소고기가 가장 단백질 함량이 높습니다.",
-                "isMe": false
-              });
-            });
-          });
-          return; // 다음 기본 응답으로 넘어가지 않도록 여기서 함수 종료
-        }
-
-    // 4. 위 조건에 해당하지 않는 경우 기본 응답
-    Future.delayed(const Duration(milliseconds: 500), () {
-      setState(() {
-        _messages.add({"text": "죄송하지만 이해하지 못했어요.", "isMe": false});
-      });
-    });
-  }
-
-  // ✅ 4. 클래스 내부에 아래 새로운 함수 3개 추가
-  // 레시피 추천 로직
-  Future<void> _recommendRecipe() async {
     try {
+      // 1. (수정됨) 로컬 DB 대신 서버에서 재고 가져오기
+      final List<Map<String, dynamic>> currentIngredients =
+          await _getServerIngredients(widget.userId); // <--- 수정된 부분
+
+      // [디버깅 코드] AI에게 전달할 (서버) 식재료 목록을 콘솔에 출력
+      print('--- [Debug] AI에게 전달할 (서버) 식재료 목록 ---');
+      print(currentIngredients);
+      print('-----------------------------------------');
+
+      // 2. 재고 + 질문을 AI 서버로 전송
+      final apiResponse =
+          await _chatbotService.getChatResponse(userInput, currentIngredients);
+
+      // 3. AI의 답변을 화면에 표시
       setState(() {
-        _messages.add({"text": "추천 레시피를 찾고 있습니다.", "isMe": false});
+        _messages.removeLast(); // "..." 제거
+        _messages.add({"text": apiResponse, "isMe": false});
+        _isLoading = false;
       });
-
-      final recipes = await fetchUserRecipes(widget.userId);
-      if (recipes.isNotEmpty) {
-        final random = Random();
-        final recipe = recipes[random.nextInt(recipes.length)];
-
-        await Future.delayed(const Duration(milliseconds: 800));
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DetailedRecipePage(
-              imageUrls: recipe.stepImages,
-              steps: recipe.stepDetails,
-            ),
-          ),
-        );
-      } else {
-        setState(() {
-          _messages.add({"text": "추천 레시피가 없습니다.", "isMe": false});
-        });
-      }
     } catch (e) {
       setState(() {
-        _messages.add({"text": "레시피를 불러오는 데 실패했습니다: $e", "isMe": false});
+        _messages.removeLast(); // "..." 제거
+        _messages.add({"text": "오류가 발생했습니다: $e", "isMe": false});
+        _isLoading = false;
       });
     }
   }
 
-  // 식재료 위치 찾기 로직
-  Future<void> _findIngredientLocation(String ingredientName) async {
-    try {
-      final result = await DatabaseHelper.instance.findIngredientLocation(ingredientName);
-
-      if (result != null) {
-        final String foundName = result['name'];
-        final String areaId = result['area_id'];
-        final String particle = _getParticle(foundName);
-        setState(() {
-          _messages.add({"text": "$foundName$particle $areaId 에 있어요.", "isMe": false});
-        });
-      } else {
-        setState(() {
-          _messages.add({"text": "'$ingredientName'(와)과 일치하거나 유사한 식재료를 찾을 수 없어요.", "isMe": false});
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _messages.add({"text": "검색 중 오류가 발생했습니다: $e", "isMe": false});
-      });
-    }
-  }
-
-  // 단어 받침 확인 로직
-  String _getParticle(String word) {
-    if (word.isEmpty) return '은';
-    final lastChar = word.runes.last;
-    if (lastChar >= 0xAC00 && lastChar <= 0xD7A3) {
-      final bool hasJongseong = (lastChar - 0xAC00) % 28 != 0;
-      return hasJongseong ? "은" : "는";
-    }
-    return "은";
-  }
-
+  // UI를 그리는 build 메서드 (변경 없음)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,10 +114,16 @@ class _ChatBotPageState extends State<ChatBotPage> {
                       color: msg["isMe"] ? Colors.blue[200] : Colors.grey[300],
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      msg["text"],
-                      style: const TextStyle(fontSize: 16),
-                    ),
+                    child: msg["text"] == "..."
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            msg["text"],
+                            style: const TextStyle(fontSize: 16),
+                          ),
                   ),
                 );
               },
@@ -188,11 +142,12 @@ class _ChatBotPageState extends State<ChatBotPage> {
                       border: InputBorder.none,
                     ),
                     onSubmitted: (_) => _sendMessage(),
+                    enabled: !_isLoading,
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.send, color: Colors.blue),
-                  onPressed: _sendMessage,
+                  onPressed: _isLoading ? null : _sendMessage,
                 )
               ],
             ),

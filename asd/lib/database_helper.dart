@@ -83,4 +83,23 @@ class DatabaseHelper {
     // 어떤 결과도 찾지 못한 경우
     return null;
   }
-}
+
+  //
+  // ✅ [수정됨] 챗봇용 함수가 'findIngredientLocation' 함수 아래,
+  //          그리고 클래스 닫는 괄호 '}' 위에 추가되었습니다.
+  //
+  Future<List<Map<String, dynamic>>> getAllIngredients(String userId) async {
+    final db = await instance.database;
+
+    // 💡 참고:
+    // 현재 'ingredients' 테이블에는 user_id 컬럼이 없어서,
+    // 이 함수는 'userId'를 사용하지 않고 DB에 있는 *모든* 재료를 반환합니다.
+    // (이는 현재 샘플 데이터 구조상 올바른 동작입니다)
+
+    // 'ingredients' 테이블의 모든 데이터를 리스트로 반환
+    final List<Map<String, dynamic>> result = await db.query('ingredients');
+
+    return result;
+  }
+
+} // <-- DatabaseHelper 클래스의 마지막 괄호
