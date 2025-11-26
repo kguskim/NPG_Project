@@ -82,17 +82,6 @@ class LoginPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 15.0),
 
-                        // 아이디/비밀번호 찾기 버튼 추가
-                        TextButton(
-                          onPressed: () {
-                            // 아이디/비밀번호 찾기 페이지로 이동
-                            // 여기에 아이디/비밀번호 찾기 페이지 구현 필요
-                          },
-                          child: const Text(
-                            "아이디/비밀번호 찾기",
-                          ),
-                        ),
-
                         // 회원가입 버튼
                         TextButton(
                           onPressed: () {
